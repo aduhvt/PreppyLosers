@@ -1,0 +1,25 @@
+.add-btn {
+  margin-top: 25px;
+  padding: 14px 28px;
+  font-size: 16px;
+  background: white;
+  color: black;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.add-btn.press {
+  transform: scale(0.95);
+}
+
+.add-btn.success {
+  background: #2ecc71;
+  color: white;
+}

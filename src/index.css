@@ -1,0 +1,24 @@
+
+@font-face {
+  font-family: 'TrashZydego';
+  src: url('/fonts/TrashZydego.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}

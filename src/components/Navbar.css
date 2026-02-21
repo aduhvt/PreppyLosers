@@ -1,0 +1,152 @@
+.navbar-inner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: px 60px;
+  background: black;
+  position: relative;
+  overflow: visible;   /* IMPORTANT */
+}
+
+
+/* LEFT */
+.nav-left {
+  position: relative;
+}
+
+.logo {
+  height: 200px;   /* Large */
+  width: auto;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+
+/* CENTER */
+.nav-center {
+  text-align: center;
+}
+
+.nav-center h1 {
+  font-family: 'TrashZydego' !important;
+  font-size: 70px;     /* fixed size for now */
+  letter-spacing: 4px; /* reduce spacing */
+  text-transform: uppercase;
+  color: white;
+}
+
+
+
+
+/* RIGHT */
+.nav-right {
+  display: flex;
+  justify-content: flex-end;
+  gap: 25px;
+}
+
+.cart-badge {
+  margin-left: 8px;
+  background: white;
+  color: black;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.bounce {
+  animation: bounceAnim 0.3s ease;
+}
+
+@keyframes bounceAnim {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  background: white;
+  color: black;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  cursor: pointer;
+}
+.cart-icon-wrapper {
+  position: relative;
+  font-size: 22px;
+  text-decoration: none;
+  color: white;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -12px;
+  background: white;
+  color: black;
+  padding: 2px 7px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+}
+.avatar-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  background: white;
+  color: black;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: transform 0.2s ease;
+}
+
+.avatar-circle:hover {
+  transform: scale(1.1);
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 50px;
+  background: #111;
+  border-radius: 10px;
+  padding: 10px 0;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.dropdown a,
+.dropdown div {
+  padding: 10px 20px;
+  text-decoration: none;
+  color: white;
+  cursor: pointer;
+}
+
+.dropdown a:hover,
+.dropdown div:hover {
+  background: #222;
+}
