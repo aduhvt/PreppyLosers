@@ -11,6 +11,25 @@ const Navbar = () => {
   const [userInitials, setUserInitials] = useState<string | null>(null);
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  // wishlist
+  useEffect(() => {
+    const updateWishlistCount = () => {
+      const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+
+      setWishlistCount(wishlist.length);
+    };
+
+    updateWishlistCount();
+
+    window.addEventListener("wishlistUpdated", updateWishlistCount);
+
+    return () => {
+      window.removeEventListener("wishlistUpdated", updateWishlistCount);
+    };
+  }, []);
+
   // Cart counter effect
   useEffect(() => {
     const updateCartCount = () => {
@@ -55,7 +74,9 @@ const Navbar = () => {
     <div className="navbar-inner">
       {/* LEFT - Logo */}
       <div className="nav-left">
-        <img src={logo} alt="logo" className="logo" />
+        <div className="logo-wrapper">
+          <img src={logo} alt="logo" className="logo" />
+        </div>
       </div>
 
       {/* CENTER - Brand Title */}
@@ -90,10 +111,7 @@ const Navbar = () => {
             Login
           </Link>
         )}
-        <Link to="/products" className="nav-link">
-          Shop
-        </Link>
-        
+
         <Link to="/cart" className="cart-icon-wrapper">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
             <path d="M7 4H5L4 6H2V8H3L6 18H18L21 8H6.5" />
@@ -101,6 +119,22 @@ const Navbar = () => {
           <span className={`cart-badge ${animate ? "bounce" : ""}`}>
             {cartCount}
           </span>
+        </Link>
+
+        <Link to="/wishlist" className="wishlist-icon-wrapper">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+            <path
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
+             2 6 4 4 6.5 4
+             8.24 4 9.91 5.01 10.54 6.36
+             11.17 5.01 12.84 4 14.5 4
+             17 4 19 6 19 8.5
+             19 12.28 15.6 15.36
+             12 19.35z"
+            />
+          </svg>
+
+          <span className="wishlist-badge">{wishlistCount}</span>
         </Link>
       </div>
     </div>

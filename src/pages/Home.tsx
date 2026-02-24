@@ -1,57 +1,88 @@
-import { CSSProperties } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import hero from "../assets/hero.jpg";
+import "./Home.css";
 
 const Home = () => {
+  const navigate = useNavigate();
+  
+
   return (
     <div style={styles.container}>
-      <div style={styles.topSpace}></div>
+      {/* Background Image Layer */}
+      <div style={styles.background}></div>
 
+      {/* Navbar floating above */}
       <div style={styles.navWrapper}>
         <Navbar />
       </div>
 
+      {/* Hero Content */}
       <div style={styles.overlay}>
-        <h2 style={styles.heading}>Elevate Your Style</h2>
-        <p>Premium streetwear for the bold.</p>
+        <h1 style={styles.brandTitle}></h1>
+        <p style={styles.tagline}>Underground street culture for the bold.</p>
+
+        <button className="shop-button" onClick={() => navigate("/products")}>
+          SHOP NOW
+        </button>
       </div>
     </div>
   );
 };
 
-const styles: { [key: string]: React.CSSProperties } = {
+const styles: any = {
   container: {
+    position: "relative",
     height: "100vh",
     width: "100%",
+    overflow: "hidden",
+  },
+
+  background: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
     backgroundImage: `url(${hero})`,
     backgroundSize: "cover",
     backgroundPosition: "center",
-    position: "relative",
-  },
-
-  topSpace: {
-    height: "40px", // 👈 This makes image visible above navbar
+    zIndex: 0,
   },
 
   navWrapper: {
-    backgroundColor: "black",
-    padding: "15px 60px",
+    position: "relative",
+    zIndex: 2,
+    paddingTop: "80px", // 👈 adds gap above navbar
   },
 
   overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
     height: "100%",
+    background: "rgba(0,0,0,0.45)",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    color: "white",
     textAlign: "center",
+    color: "white",
+    zIndex: 1,
   },
 
-  heading: {
-    fontSize: "90px",
-    fontWeight: 600,
-    letterSpacing: "4px",
+  brandTitle: {
+    fontSize: "clamp(40px, 6vw, 80px)",
+    letterSpacing: "8px",
+    marginBottom: "20px",
+    
+  },
+
+  tagline: {
+    fontSize: "18px",
+    opacity: 0.85,
+    marginBottom: "40px",
   },
 };
 

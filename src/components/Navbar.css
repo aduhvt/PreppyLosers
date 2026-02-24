@@ -1,13 +1,12 @@
 .navbar-inner {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
-  padding: px 60px;
-  background: black;
-  position: relative;
-  overflow: visible;   /* IMPORTANT */
+  justify-content: space-between;
+  padding: 12px 60px;
+  width: 100%;
+  box-sizing: border-box;
+  background : black ;
 }
-
 
 /* LEFT */
 .nav-left {
@@ -15,13 +14,32 @@
 }
 
 .logo {
-  height: 200px;   /* Large */
+  height: 200px; /* adjust size */
   width: auto;
+
   position: absolute;
   top: 50%;
+  left: 0;
+
+  transform: translateY(-50%) rotate(0deg);
+
+  animation: rotateCounterClockwise 20s linear infinite;
+}
+.logo-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 0;
   transform: translateY(-50%);
 }
 
+.logo {
+  height: 200px;
+  width: auto;
+  animation: rotateCounterClockwise 20s linear infinite;
+}
+.logo:hover {
+  animation-duration: 4s;
+}
 
 /* CENTER */
 .nav-center {
@@ -42,7 +60,7 @@
 /* RIGHT */
 .nav-right {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: 25px;
 }
 
@@ -87,21 +105,28 @@
 }
 .cart-icon-wrapper {
   position: relative;
+  display: inline-flex;
+  align-items: center;
   font-size: 22px;
-  text-decoration: none;
   color: white;
+  text-decoration: none;
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
-
+.cart-icon-wrapper:hover .cart-badge {
+  transform: scale(1.2);
+  transition: transform 0.2s ease;
+}
 .cart-badge {
   position: absolute;
-  top: -8px;
-  right: -12px;
+  top: -6px;
+  right: -10px;
   background: white;
   color: black;
-  padding: 2px 7px;
+  padding: 2px 6px;
   border-radius: 50%;
   font-size: 11px;
   font-weight: bold;
+  transition: transform 0.2s ease;
 }
 .avatar-wrapper {
   position: relative;
@@ -149,4 +174,36 @@
 .dropdown a:hover,
 .dropdown div:hover {
   background: #222;
+}
+.wishlist-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 15px;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.wishlist-icon-wrapper:hover {
+  transform: scale(1.15) translateY(-2px);
+}
+
+.wishlist-badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background: white;
+  color: black;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+}
+@keyframes rotateCounterClockwise {
+  from {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateY(-50%) rotate(-360deg);
+  }
 }

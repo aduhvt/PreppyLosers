@@ -1,0 +1,16 @@
+.shop-button {
+  padding: 16px 50px;
+  font-size: 16px;
+  letter-spacing: 2px;
+  background: white;
+  color: black;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.shop-button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}

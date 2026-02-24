@@ -22,3 +22,21 @@ body {
   width: 100%;
   height: 100%;
 }
+
+/* 1. Load the font */
+@font-face {
+  font-family: 'Minecraft';
+  src: url('./assets/fonts/Minecraft.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* 2. Apply to everything by default */
+body {
+  font-family: 'Minecraft', sans-serif;
+}
+
+/* 3. Revert titles back to standard fonts (or a different specific font) */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Arial', sans-serif; /* Change 'Arial' to your preferred title font */
+}
