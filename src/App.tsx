@@ -7,7 +7,8 @@ import Products from "./pages/Products";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
-
+import Orders from "./pages/Orders";
+import AdminOrders from "./pages/AdminOrders";
 
 function App() {
   return (
@@ -19,7 +20,14 @@ function App() {
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
-
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/dashboard"
@@ -29,7 +37,19 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+        path="/admin/orders"
+        element={
+          <ProtectedRoute>
+            <AdminOrders />
+          </ProtectedRoute>
+        }
+      />
+
+
       </Routes>
+      
     </BrowserRouter>
   );
 }

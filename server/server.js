@@ -9,6 +9,13 @@ const Product = require("./models/Product");
 const User = require("./models/User");
 const Order = require("./models/Order");
 
+const adminOnly = (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  next();
+};
+
 const app = express();
 
 app.use(cors());
@@ -87,10 +94,14 @@ app.post("/api/auth/verify-otp", async (req, res) => {
 
     // 🔐 Generate JWT
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" },
-    );
+  {
+    userId: user._id,
+    email: user.email,
+    role: user.role,   // IMPORTANT
+  },
+  process.env.JWT_SECRET,
+  { expiresIn: "7d" }
+);
 
     res.json({
       message: "Login successful",
@@ -199,3 +210,55 @@ app.post("/api/orders", authenticate, async (req, res) => {
     res.status(500).json({ message: "Failed to create order" });
   }
 });
+
+app.get("/api/orders/my", authenticate, async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user.userId })
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    console.error("FETCH ORDERS ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch orders" });
+  }
+});
+
+app.get(
+  "/api/admin/orders",
+  authenticate,
+  adminOnly,
+  async (req, res) => {
+    try {
+      const orders = await Order.find()
+        .populate("user", "email")
+        .sort({ createdAt: -1 });
+
+      res.json(orders);
+    } catch (error) {
+      console.error("ADMIN FETCH ERROR:", error);
+      res.status(500).json({ message: "Failed to fetch orders" });
+    }
+  }
+);
+
+app.put(
+  "/api/admin/orders/:id",
+  authenticate,
+  adminOnly,
+  async (req, res) => {
+    try {
+      const { paymentStatus } = req.body;
+
+      const order = await Order.findByIdAndUpdate(
+        req.params.id,
+        { paymentStatus },
+        { new: true }
+      );
+
+      res.json(order);
+    } catch (error) {
+      console.error("UPDATE ORDER ERROR:", error);
+      res.status(500).json({ message: "Failed to update order" });
+    }
+  }
+);
