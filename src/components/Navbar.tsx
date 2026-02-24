@@ -93,6 +93,7 @@ const Navbar = () => {
         <Link to="/products" className="nav-link">
           Shop
         </Link>
+        
         <Link to="/cart" className="cart-icon-wrapper">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
             <path d="M7 4H5L4 6H2V8H3L6 18H18L21 8H6.5" />

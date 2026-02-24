@@ -9,6 +9,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import AdminOrders from "./pages/AdminOrders";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -39,17 +40,22 @@ function App() {
         />
 
         <Route
-        path="/admin/orders"
-        element={
-          <ProtectedRoute>
-            <AdminOrders />
-          </ProtectedRoute>
-        }
-      />
-
-
+          path="/admin/orders"
+          element={
+            <ProtectedRoute>
+              <AdminOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-      
     </BrowserRouter>
   );
 }

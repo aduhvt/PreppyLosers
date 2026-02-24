@@ -262,3 +262,22 @@ app.put(
     }
   }
 );
+app.put("/api/users/profile", authenticate, async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      { name },
+      { new: true }
+    );
+
+    res.json({
+      message: "Profile updated",
+      user,
+    });
+  } catch (error) {
+    console.error("PROFILE UPDATE ERROR:", error);
+    res.status(500).json({ message: "Failed to update profile" });
+  }
+});
