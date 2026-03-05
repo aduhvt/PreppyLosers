@@ -202,21 +202,68 @@ app.post("/api/orders", authenticate, async (req, res) => {
   try {
     const { items, shippingAddress, totalAmount } = req.body;
 
+    // 1. Create Razorpay Order first to get the ID
+    const options = {
+      amount: totalAmount * 100, // Amount in paise
+      currency: "INR",
+      receipt: `receipt_${Date.now()}`,
+    };
+
+    const razorpayOrder = await razorpay.orders.create(options);
+
+    // 2. Create DB Order with the Razorpay ID
     const order = await Order.create({
       user: req.user.userId,
       items,
       shippingAddress,
       totalAmount,
       paymentStatus: "pending",
+      razorpayOrderId: razorpayOrder.id,
     });
 
     res.json({
       message: "Order created successfully",
-      order,
+      order: {
+        ...order.toObject(),
+        id: razorpayOrder.id, // Ensure frontend gets the Razorpay order ID
+        amount: razorpayOrder.amount,
+      },
     });
   } catch (error) {
     console.error("ORDER ERROR:", error);
     res.status(500).json({ message: "Failed to create order" });
+  }
+});
+
+// VERIFY PAYMENT ROUTE
+app.post("/api/orders/verify", authenticate, async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const crypto = require("crypto");
+    
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest("hex");
+
+    if (expectedSignature === razorpay_signature) {
+      // Payment is verified
+      await Order.findOneAndUpdate(
+        { razorpayOrderId: razorpay_order_id },
+        { 
+          paymentStatus: "paid",
+          razorpayPaymentId: razorpay_payment_id
+        }
+      );
+
+      res.json({ success: true, message: "Payment verified successfully" });
+    } else {
+      res.status(400).json({ success: false, message: "Invalid signature" });
+    }
+  } catch (error) {
+    console.error("VERIFY ERROR:", error);
+    res.status(500).json({ message: "Verification failed" });
   }
 });
 
@@ -279,24 +326,5 @@ app.put("/api/users/profile", authenticate, async (req, res) => {
   } catch (error) {
     console.error("PROFILE UPDATE ERROR:", error);
     res.status(500).json({ message: "Failed to update profile" });
-  }
-});
-
-// RAZORPAY
-app.post("/", async (req, res) => {
-  // ... save order to your DB as 'pending' ...
-
-  const options = {
-    amount: req.body.totalAmount * 100, // Amount in paise
-    currency: "INR",
-    receipt: `receipt_${Date.now()}`,
-  };
-
-  try {
-    const razorpayOrder = await razorpay.orders.create(options);
-    // Return both your DB order and the Razorpay order info
-    res.json({ order: razorpayOrder });
-  } catch (err) {
-    res.status(500).send("Error creating Razorpay order");
   }
 });

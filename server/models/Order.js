@@ -28,6 +28,18 @@ const orderSchema = new mongoose.Schema(
       city: String,
       pincode: String,
       phone: String,
+      country: String,
+      apartment: String,
+    },
+
+    billingAddress: {
+      fullName: String,
+      address: String,
+      city: String,
+      pincode: String,
+      phone: String,
+      country: String,
+      apartment: String,
     },
 
     totalAmount: {
@@ -39,6 +51,9 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "pending", // pending, paid
     },
+
+    razorpayOrderId: String,
+    razorpayPaymentId: String,
   },
   { timestamps: true }
 );

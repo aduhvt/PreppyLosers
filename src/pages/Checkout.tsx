@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
+import "./Checkout.css";
 
 interface CartItem {
   _id: string;
@@ -9,13 +11,31 @@ interface CartItem {
   selectedSize: string;
   images: string[];
 }
-// RAZORPAY TRIGGER
 
 const Checkout = () => {
+  const { user, logout } = useAuth();
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [form, setForm] = useState({
-    fullName: "",
+  const [showLogout, setShowLogout] = useState(false);
+  const [differentBilling, setDifferentBilling] = useState(false);
+
+  const [deliveryAddress, setDeliveryAddress] = useState({
+    country: "India",
+    firstName: "",
+    lastName: "",
     address: "",
+    apartment: "",
+    city: "",
+    pincode: "",
+    phone: "",
+    email: "",
+  });
+
+  const [billingAddress, setBillingAddress] = useState({
+    country: "India",
+    firstName: "",
+    lastName: "",
+    address: "",
+    apartment: "",
     city: "",
     pincode: "",
     phone: "",
@@ -24,30 +44,65 @@ const Checkout = () => {
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
     setCart(storedCart);
-  }, []);
+    if (user) {
+      setDeliveryAddress((prev) => ({ ...prev, email: user.email }));
+    }
+  }, [user]);
 
-  const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const subtotal = cart.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0,
+  );
+  const shipping = 0;
+  const total = subtotal + shipping;
 
-  const handleChange = (e: any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleDeliveryChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    setDeliveryAddress({ ...deliveryAddress, [e.target.name]: e.target.value });
+  };
+
+  const handleBillingChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    setBillingAddress({ ...billingAddress, [e.target.name]: e.target.value });
   };
 
   const placeOrder = async () => {
     if (
-      !form.fullName ||
-      !form.address ||
-      !form.city ||
-      !form.pincode ||
-      !form.phone
+      !deliveryAddress.firstName ||
+      !deliveryAddress.address ||
+      !deliveryAddress.city ||
+      !deliveryAddress.pincode ||
+      !deliveryAddress.phone
     ) {
-      alert("Please fill all details");
+      alert("Please fill all required delivery details");
       return;
     }
+
+    const shippingAddress = {
+      fullName: `${deliveryAddress.firstName} ${deliveryAddress.lastName}`,
+      address: deliveryAddress.address,
+      city: deliveryAddress.city,
+      pincode: deliveryAddress.pincode,
+      phone: deliveryAddress.phone,
+      country: deliveryAddress.country,
+      apartment: deliveryAddress.apartment,
+    };
+
+    const billingAddr = differentBilling ? {
+      fullName: `${billingAddress.firstName} ${billingAddress.lastName}`,
+      address: billingAddress.address,
+      city: billingAddress.city,
+      pincode: billingAddress.pincode,
+      phone: billingAddress.phone,
+      country: billingAddress.country,
+      apartment: billingAddress.apartment,
+    } : shippingAddress;
 
     try {
       const token = localStorage.getItem("token");
 
-      // 1. Create the order in your Backend (which should now return a Razorpay Order ID)
       const { data } = await axios.post(
         "http://localhost:5000/api/orders",
         {
@@ -59,25 +114,22 @@ const Checkout = () => {
             selectedSize: item.selectedSize,
             image: item.images[0],
           })),
-          shippingAddress: form,
+          shippingAddress,
+          billingAddress: billingAddr,
           totalAmount: total,
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      console.log("Order Data from Backend:", data); // Add this to debug!
-      
-      // 2. Configure Razorpay Options
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Replace with your actual Test Key ID
-        amount: data.order.amount, // Amount returned from backend (in paise)
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: data.order.amount,
         currency: "INR",
         name: "Preppy Losers",
         description: "Streetwear Purchase",
-        order_id: data.order.id, // This comes from your backend Razorpay instance
+        order_id: data.order.id,
         handler: async function (response: any) {
           try {
-            // 3. Verify payment on your backend
             const verifyRes = await axios.post(
               "http://localhost:5000/api/orders/verify",
               {
@@ -91,8 +143,7 @@ const Checkout = () => {
             if (verifyRes.data.success) {
               alert("Payment Successful! Order Placed 🔥");
               localStorage.removeItem("cart");
-              // Optional: Redirect to success page
-              // window.location.href = "/success";
+              window.location.href = "/orders";
             }
           } catch (err) {
             console.error(err);
@@ -100,19 +151,16 @@ const Checkout = () => {
           }
         },
         prefill: {
-          name: form.fullName,
-          contact: form.phone,
+          name: `${deliveryAddress.firstName} ${deliveryAddress.lastName}`,
+          contact: deliveryAddress.phone,
+          email: deliveryAddress.email,
         },
         theme: {
-          color: "#000000", // Matches your black aesthetic
+          color: "#000000",
         },
       };
 
-      // 4. Open the Razorpay Modal
       const rzp = new (window as any).Razorpay(options);
-
-      console.log("Razorpay Order ID:", data.order.id); // debug
-
       rzp.open();
     } catch (error) {
       console.error(error);
@@ -120,134 +168,228 @@ const Checkout = () => {
     }
   };
 
-  return (
-    <div style={styles.container}>
-      <h1 style={styles.heading}>Checkout</h1>
+  const renderAddressFields = (type: "delivery" | "billing") => {
+    const isDelivery = type === "delivery";
+    const values = isDelivery ? deliveryAddress : billingAddress;
+    const onChange = isDelivery ? handleDeliveryChange : handleBillingChange;
 
-      <div style={styles.layout}>
-        {/* Shipping Form */}
-        <div style={styles.form}>
-          <h2>Shipping Details</h2>
-
+    return (
+      <>
+        <select
+          name="country"
+          className="checkout-input"
+          value={values.country}
+          onChange={onChange}
+        >
+          <option value="India">India</option>
+        </select>
+        <div className="input-row">
           <input
-            name="fullName"
-            placeholder="Full Name"
-            onChange={handleChange}
-            style={styles.input}
+            name="firstName"
+            placeholder="First name"
+            className="checkout-input"
+            value={values.firstName}
+            onChange={onChange}
           />
-
           <input
-            name="address"
-            placeholder="Address"
-            onChange={handleChange}
-            style={styles.input}
+            name="lastName"
+            placeholder="Last name"
+            className="checkout-input"
+            value={values.lastName}
+            onChange={onChange}
           />
-
+        </div>
+        <input
+          name="address"
+          placeholder="Address"
+          className="checkout-input"
+          value={values.address}
+          onChange={onChange}
+        />
+        <input
+          name="apartment"
+          placeholder="Apartment, suite, etc. (optional)"
+          className="checkout-input"
+          value={values.apartment}
+          onChange={onChange}
+        />
+        <div className="input-row">
           <input
             name="city"
             placeholder="City"
-            onChange={handleChange}
-            style={styles.input}
+            className="checkout-input"
+            value={values.city}
+            onChange={onChange}
           />
-
           <input
             name="pincode"
             placeholder="Pincode"
-            onChange={handleChange}
-            style={styles.input}
-          />
-
-          <input
-            name="phone"
-            placeholder="Phone"
-            onChange={handleChange}
-            style={styles.input}
+            className="checkout-input"
+            value={values.pincode}
+            onChange={onChange}
           />
         </div>
+        <input
+          name="phone"
+          placeholder="Phone"
+          className="checkout-input"
+          value={values.phone}
+          onChange={onChange}
+        />
+      </>
+    );
+  };
 
-        {/* Order Summary */}
-        <div style={styles.summary}>
-          <h2>Order Summary</h2>
+  return (
+    <div className="checkout-container">
+      <header className="checkout-header">
+        <h1 className="store-name">PREPPY LOSERS</h1>
+      </header>
 
-          {cart.map((item, index) => (
-            <div key={index} style={styles.itemRow}>
-              <span>{item.name}</span>
-              <span>
-                {item.quantity} × ₹{item.price}
-              </span>
+      <div className="checkout-content">
+        <div className="checkout-left">
+          <div className="contact-section">
+            <h2 className="section-title" style={{ marginTop: 0 }}>
+              Contact
+            </h2>
+            {user ? (
+              <div className="auth-info">
+                <span>{user.email}</span>
+                <div
+                  className="dots-menu"
+                  onClick={() => setShowLogout(!showLogout)}
+                >
+                  ⋮
+                  {showLogout && (
+                    <div className="logout-dropdown" onClick={logout}>
+                      Sign out
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <a
+                href="/login"
+                style={{
+                  color: "#333",
+                  textDecoration: "underline",
+                  fontSize: "14px",
+                }}
+              >
+                Log in
+              </a>
+            )}
+          </div>
+
+          {!user && (
+            <input
+              name="email"
+              placeholder="Email or mobile phone number"
+              className="checkout-input"
+              value={deliveryAddress.email}
+              onChange={handleDeliveryChange}
+            />
+          )}
+
+          <div className="checkbox-container">
+            <input type="checkbox" id="news" />
+            <label htmlFor="news">Email me about news and offers</label>
+          </div>
+
+          <h2 className="section-title">Delivery</h2>
+          {renderAddressFields("delivery")}
+
+          <h2 className="section-title">Shipping method</h2>
+          <div className="shipping-method-box">
+            <span>Free shipping - Pay online</span>
+            <span style={{ fontWeight: "bold" }}>FREE</span>
+          </div>
+
+          <h2 className="section-title">Payment</h2>
+          <p style={{ fontSize: "12px", color: "#666", marginBottom: "10px" }}>
+            All transactions are secure and encrypted.
+          </p>
+          <div className="payment-box">
+            <div className="payment-item">
+              <input type="radio" checked readOnly />
+              <label>Razorpay Secure (UPI, Cards, Int'l Cards, Wallets)</label>
             </div>
-          ))}
+          </div>
 
-          <hr style={{ margin: "20px 0" }} />
+          <h2 className="section-title">Billing address</h2>
+          <div className="billing-section">
+            <div
+              className="billing-option"
+              onClick={() => setDifferentBilling(false)}
+            >
+              <input type="radio" checked={!differentBilling} readOnly />
+              <label>Same as shipping address</label>
+            </div>
+            <div
+              className="billing-option"
+              onClick={() => setDifferentBilling(true)}
+            >
+              <input type="radio" checked={differentBilling} readOnly />
+              <label>Use a different billing address</label>
+            </div>
+            {differentBilling && (
+              <div className="billing-details-form">
+                {renderAddressFields("billing")}
+              </div>
+            )}
+          </div>
 
-          <h3>Total: ₹ {total}</h3>
-
-          <button style={styles.checkoutBtn} onClick={placeOrder}>
-            Place Order
+          <button className="pay-now-btn" onClick={placeOrder}>
+            Pay now
           </button>
+        </div>
+
+        <div className="checkout-right">
+          <div className="order-summary">
+            {cart.map((item, index) => (
+              <div key={index} className="summary-item">
+                <div className="item-img-container">
+                  <img
+                    src={item.images[0]}
+                    alt={item.name}
+                    className="item-img"
+                  />
+                  <span className="item-qty-badge">{item.quantity}</span>
+                </div>
+                <div className="item-info">
+                  <div style={{ fontWeight: 500 }}>{item.name}</div>
+                  <div style={{ fontSize: "12px", color: "#666" }}>
+                    {item.selectedSize}
+                  </div>
+                </div>
+                <div className="item-price">₹{item.price * item.quantity}</div>
+              </div>
+            ))}
+
+            <div className="totals-section">
+              <div className="total-row">
+                <span>Subtotal</span>
+                <span>₹{subtotal}</span>
+              </div>
+              <div className="total-row">
+                <span>Shipping</span>
+                <span>FREE</span>
+              </div>
+              <div className="total-row grand-total">
+                <span>Total</span>
+                <span>₹{total}</span>
+              </div>
+              <div
+                style={{ fontSize: "12px", color: "#666", textAlign: "right" }}
+              >
+                Including ₹0 in taxes
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-const styles: any = {
-  container: {
-    padding: "60px",
-    color: "white",
-    background: "#0e0e0e",
-    minHeight: "100vh",
-  },
-
-  heading: {
-    marginBottom: "40px",
-  },
-
-  layout: {
-    display: "flex",
-    gap: "40px",
-  },
-
-  form: {
-    flex: 1,
-    background: "#151515",
-    padding: "30px",
-    borderRadius: "12px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px",
-  },
-
-  input: {
-    padding: "12px",
-    borderRadius: "6px",
-    border: "none",
-    background: "#222",
-    color: "white",
-  },
-
-  summary: {
-    width: "400px",
-    background: "#151515",
-    padding: "30px",
-    borderRadius: "12px",
-  },
-
-  itemRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: "10px",
-  },
-
-  checkoutBtn: {
-    marginTop: "20px",
-    padding: "12px",
-    background: "white",
-    color: "black",
-    borderRadius: "6px",
-    border: "none",
-    cursor: "pointer",
-  },
 };
 
 export default Checkout;
