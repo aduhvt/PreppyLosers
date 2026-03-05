@@ -8,8 +8,11 @@ const { Resend } = require("resend");
 const Product = require("./models/Product");
 const User = require("./models/User");
 const Order = require("./models/Order");
-const Razorpay = require('razorpay');
-const razorpay = new Razorpay({ key_id: '...', key_secret: '...' });
+const Razorpay = require("razorpay");
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 const instance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -101,14 +104,14 @@ app.post("/api/auth/verify-otp", async (req, res) => {
 
     // 🔐 Generate JWT
     const token = jwt.sign(
-  {
-    userId: user._id,
-    email: user.email,
-    role: user.role,   // IMPORTANT
-  },
-  process.env.JWT_SECRET,
-  { expiresIn: "7d" }
-);
+      {
+        userId: user._id,
+        email: user.email,
+        role: user.role, // IMPORTANT
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
 
     res.json({
       message: "Login successful",
@@ -211,7 +214,6 @@ app.post("/api/orders", authenticate, async (req, res) => {
       message: "Order created successfully",
       order,
     });
-
   } catch (error) {
     console.error("ORDER ERROR:", error);
     res.status(500).json({ message: "Failed to create order" });
@@ -220,8 +222,9 @@ app.post("/api/orders", authenticate, async (req, res) => {
 
 app.get("/api/orders/my", authenticate, async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user.userId })
-      .sort({ createdAt: -1 });
+    const orders = await Order.find({ user: req.user.userId }).sort({
+      createdAt: -1,
+    });
 
     res.json(orders);
   } catch (error) {
@@ -230,45 +233,35 @@ app.get("/api/orders/my", authenticate, async (req, res) => {
   }
 });
 
-app.get(
-  "/api/admin/orders",
-  authenticate,
-  adminOnly,
-  async (req, res) => {
-    try {
-      const orders = await Order.find()
-        .populate("user", "email")
-        .sort({ createdAt: -1 });
+app.get("/api/admin/orders", authenticate, adminOnly, async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate("user", "email")
+      .sort({ createdAt: -1 });
 
-      res.json(orders);
-    } catch (error) {
-      console.error("ADMIN FETCH ERROR:", error);
-      res.status(500).json({ message: "Failed to fetch orders" });
-    }
+    res.json(orders);
+  } catch (error) {
+    console.error("ADMIN FETCH ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch orders" });
   }
-);
+});
 
-app.put(
-  "/api/admin/orders/:id",
-  authenticate,
-  adminOnly,
-  async (req, res) => {
-    try {
-      const { paymentStatus } = req.body;
+app.put("/api/admin/orders/:id", authenticate, adminOnly, async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
 
-      const order = await Order.findByIdAndUpdate(
-        req.params.id,
-        { paymentStatus },
-        { new: true }
-      );
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { paymentStatus },
+      { new: true },
+    );
 
-      res.json(order);
-    } catch (error) {
-      console.error("UPDATE ORDER ERROR:", error);
-      res.status(500).json({ message: "Failed to update order" });
-    }
+    res.json(order);
+  } catch (error) {
+    console.error("UPDATE ORDER ERROR:", error);
+    res.status(500).json({ message: "Failed to update order" });
   }
-);
+});
 app.put("/api/users/profile", authenticate, async (req, res) => {
   try {
     const { name } = req.body;
@@ -276,7 +269,7 @@ app.put("/api/users/profile", authenticate, async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user.userId,
       { name },
-      { new: true }
+      { new: true },
     );
 
     res.json({
@@ -290,7 +283,7 @@ app.put("/api/users/profile", authenticate, async (req, res) => {
 });
 
 // RAZORPAY
-router.post("/", async (req, res) => {
+app.post("/", async (req, res) => {
   // ... save order to your DB as 'pending' ...
 
   const options = {
@@ -302,7 +295,7 @@ router.post("/", async (req, res) => {
   try {
     const razorpayOrder = await razorpay.orders.create(options);
     // Return both your DB order and the Razorpay order info
-    res.json({ order: razorpayOrder }); 
+    res.json({ order: razorpayOrder });
   } catch (err) {
     res.status(500).send("Error creating Razorpay order");
   }

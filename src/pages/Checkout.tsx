@@ -9,8 +9,7 @@ interface CartItem {
   selectedSize: string;
   images: string[];
 }
-// RAZORPAY TRIGGER 
-
+// RAZORPAY TRIGGER
 
 const Checkout = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -27,92 +26,99 @@ const Checkout = () => {
     setCart(storedCart);
   }, []);
 
-  const total = cart.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
+  const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-const placeOrder = async () => {
-  if (!form.fullName || !form.address || !form.city || !form.pincode || !form.phone) {
-    alert("Please fill all details");
-    return;
-  }
+  const placeOrder = async () => {
+    if (
+      !form.fullName ||
+      !form.address ||
+      !form.city ||
+      !form.pincode ||
+      !form.phone
+    ) {
+      alert("Please fill all details");
+      return;
+    }
 
-  try {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    // 1. Create the order in your Backend (which should now return a Razorpay Order ID)
-    const { data } = await axios.post(
-      "http://localhost:5000/api/orders",
-      {
-        items: cart.map((item) => ({
-          productId: item._id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          selectedSize: item.selectedSize,
-          image: item.images[0],
-        })),
-        shippingAddress: form,
-        totalAmount: total,
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      // 1. Create the order in your Backend (which should now return a Razorpay Order ID)
+      const { data } = await axios.post(
+        "http://localhost:5000/api/orders",
+        {
+          items: cart.map((item) => ({
+            productId: item._id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            selectedSize: item.selectedSize,
+            image: item.images[0],
+          })),
+          shippingAddress: form,
+          totalAmount: total,
+        },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      console.log("Order Data from Backend:", data); // Add this to debug!
+      
+      // 2. Configure Razorpay Options
 
-    // 2. Configure Razorpay Options
-    const options = {
-      key: "YOUR_RAZORPAY_KEY_ID", // Replace with your actual Test Key ID
-      amount: data.order.amount, // Amount returned from backend (in paise)
-      currency: "INR",
-      name: "Preppy Losers",
-      description: "Streetwear Purchase",
-      order_id: data.order.id, // This comes from your backend Razorpay instance
-      handler: async function (response: any) {
-        try {
-          // 3. Verify payment on your backend
-          const verifyRes = await axios.post(
-            "http://localhost:5000/api/orders/verify",
-            {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Replace with your actual Test Key ID
+        amount: data.order.amount, // Amount returned from backend (in paise)
+        currency: "INR",
+        name: "Preppy Losers",
+        description: "Streetwear Purchase",
+        order_id: data.order.id, // This comes from your backend Razorpay instance
+        handler: async function (response: any) {
+          try {
+            // 3. Verify payment on your backend
+            const verifyRes = await axios.post(
+              "http://localhost:5000/api/orders/verify",
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              },
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
 
-          if (verifyRes.data.success) {
-            alert("Payment Successful! Order Placed 🔥");
-            localStorage.removeItem("cart");
-            // Optional: Redirect to success page
-            // window.location.href = "/success";
+            if (verifyRes.data.success) {
+              alert("Payment Successful! Order Placed 🔥");
+              localStorage.removeItem("cart");
+              // Optional: Redirect to success page
+              // window.location.href = "/success";
+            }
+          } catch (err) {
+            console.error(err);
+            alert("Payment verification failed");
           }
-        } catch (err) {
-          console.error(err);
-          alert("Payment verification failed");
-        }
-      },
-      prefill: {
-        name: form.fullName,
-        contact: form.phone,
-      },
-      theme: {
-        color: "#000000", // Matches your black aesthetic
-      },
-    };
+        },
+        prefill: {
+          name: form.fullName,
+          contact: form.phone,
+        },
+        theme: {
+          color: "#000000", // Matches your black aesthetic
+        },
+      };
 
-    // 4. Open the Razorpay Modal
-    const rzp = new (window as any).Razorpay(options);
-    rzp.open();
+      // 4. Open the Razorpay Modal
+      const rzp = new (window as any).Razorpay(options);
 
-  } catch (error) {
-    console.error(error);
-    alert("Failed to initiate payment");
-  }
-};
+      console.log("Razorpay Order ID:", data.order.id); // debug
+
+      rzp.open();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to initiate payment");
+    }
+  };
 
   return (
     <div style={styles.container}>
