@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import hero from "../assets/hero.jpg";
 import "./Home.css";
+import WhatsAppWidget from '../components/WhatsappWidget/WhatsAppWidget';
+
 
 const Home = () => {
   const navigate = useNavigate();
@@ -26,6 +28,7 @@ const Home = () => {
           SHOP NOW
         </button>
       </div>
+      <WhatsAppWidget />
     </div>
   );
 };

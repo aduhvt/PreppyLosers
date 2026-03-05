@@ -9,6 +9,8 @@ interface CartItem {
   selectedSize: string;
   images: string[];
 }
+// RAZORPAY TRIGGER 
+
 
 const Checkout = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -34,8 +36,8 @@ const Checkout = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const placeOrder = async () => {
-  if (!form.fullName || !form.address || !form.city || !form.pincode) {
+const placeOrder = async () => {
+  if (!form.fullName || !form.address || !form.city || !form.pincode || !form.phone) {
     alert("Please fill all details");
     return;
   }
@@ -43,7 +45,8 @@ const Checkout = () => {
   try {
     const token = localStorage.getItem("token");
 
-    const res = await axios.post(
+    // 1. Create the order in your Backend (which should now return a Razorpay Order ID)
+    const { data } = await axios.post(
       "http://localhost:5000/api/orders",
       {
         items: cart.map((item) => ({
@@ -57,20 +60,57 @@ const Checkout = () => {
         shippingAddress: form,
         totalAmount: total,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    alert("Order created successfully 🔥");
+    // 2. Configure Razorpay Options
+    const options = {
+      key: "YOUR_RAZORPAY_KEY_ID", // Replace with your actual Test Key ID
+      amount: data.order.amount, // Amount returned from backend (in paise)
+      currency: "INR",
+      name: "Preppy Losers",
+      description: "Streetwear Purchase",
+      order_id: data.order.id, // This comes from your backend Razorpay instance
+      handler: async function (response: any) {
+        try {
+          // 3. Verify payment on your backend
+          const verifyRes = await axios.post(
+            "http://localhost:5000/api/orders/verify",
+            {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
 
-    localStorage.removeItem("cart");
+          if (verifyRes.data.success) {
+            alert("Payment Successful! Order Placed 🔥");
+            localStorage.removeItem("cart");
+            // Optional: Redirect to success page
+            // window.location.href = "/success";
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Payment verification failed");
+        }
+      },
+      prefill: {
+        name: form.fullName,
+        contact: form.phone,
+      },
+      theme: {
+        color: "#000000", // Matches your black aesthetic
+      },
+    };
+
+    // 4. Open the Razorpay Modal
+    const rzp = new (window as any).Razorpay(options);
+    rzp.open();
 
   } catch (error) {
     console.error(error);
-    alert("Failed to create order");
+    alert("Failed to initiate payment");
   }
 };
 

@@ -11,6 +11,7 @@ import Orders from "./pages/Orders";
 import AdminOrders from "./pages/AdminOrders";
 import Profile from "./pages/Profile";
 
+
 function App() {
   return (
     <BrowserRouter>
@@ -21,6 +22,7 @@ function App() {
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+        
         <Route
           path="/orders"
           element={
@@ -56,6 +58,7 @@ function App() {
           }
         />
       </Routes>
+      
     </BrowserRouter>
   );
 }

@@ -8,6 +8,13 @@ const { Resend } = require("resend");
 const Product = require("./models/Product");
 const User = require("./models/User");
 const Order = require("./models/Order");
+const Razorpay = require('razorpay');
+const razorpay = new Razorpay({ key_id: '...', key_secret: '...' });
+
+const instance = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 const adminOnly = (req, res, next) => {
   if (req.user.role !== "admin") {
@@ -279,5 +286,24 @@ app.put("/api/users/profile", authenticate, async (req, res) => {
   } catch (error) {
     console.error("PROFILE UPDATE ERROR:", error);
     res.status(500).json({ message: "Failed to update profile" });
+  }
+});
+
+// RAZORPAY
+router.post("/", async (req, res) => {
+  // ... save order to your DB as 'pending' ...
+
+  const options = {
+    amount: req.body.totalAmount * 100, // Amount in paise
+    currency: "INR",
+    receipt: `receipt_${Date.now()}`,
+  };
+
+  try {
+    const razorpayOrder = await razorpay.orders.create(options);
+    // Return both your DB order and the Razorpay order info
+    res.json({ order: razorpayOrder }); 
+  } catch (err) {
+    res.status(500).send("Error creating Razorpay order");
   }
 });
