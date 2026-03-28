@@ -14,6 +14,7 @@ interface User {
     phone: string;
     country: string;
     apartment: string;
+    phoneNumber?: string;
   };
 }
 
