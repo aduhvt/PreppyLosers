@@ -39,7 +39,10 @@ const adminOnly = (req, res, next) => {
 const app = express();
 
 app.use(cors({
-  origin: "https://preppylosers.com",
+  origin: [
+    "https://preppylosers.com",
+    "https://www.preppylosers.com"
+  ],
   credentials: true
 }));
 

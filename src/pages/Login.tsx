@@ -17,7 +17,7 @@ const Login = () => {
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/google", {
+      const res = await axios.post("http://:5000/api/auth/google", {
         token: credentialResponse.credential,
       });
 
@@ -33,7 +33,7 @@ const Login = () => {
     if (e) e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/send-otp", {
+      const res = await axios.post("http://:5000/api/auth/send-otp", {
         email,
       });
 
@@ -54,7 +54,7 @@ const Login = () => {
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/send-phone-otp", {
+      const res = await axios.post("http://:5000/api/auth/send-phone-otp", {
         phoneNumber: `+91${phoneNumber}`,
       });
 
@@ -70,7 +70,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/verify-phone-otp", {
+      const res = await axios.post("http://:5000/api/auth/verify-phone-otp", {
         phoneNumber: `+91${phoneNumber}`,
         otp,
       });
@@ -91,7 +91,13 @@ const Login = () => {
           <div className="fade-in">
             {loginMethod === "email" ? (
               <form onSubmit={sendMagicLink}>
-                <p style={{ fontSize: "14px", marginBottom: "20px", opacity: 0.7 }}>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    marginBottom: "20px",
+                    opacity: 0.7,
+                  }}
+                >
                   Enter your email to receive a secure login link.
                 </p>
                 <input
@@ -105,11 +111,26 @@ const Login = () => {
               </form>
             ) : (
               <form onSubmit={sendPhoneOtp}>
-                <p style={{ fontSize: "14px", marginBottom: "20px", opacity: 0.7 }}>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    marginBottom: "20px",
+                    opacity: 0.7,
+                  }}
+                >
                   Enter your phone number to receive a WhatsApp OTP.
                 </p>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "15px" }}>
-                  <span style={{ fontSize: "18px", fontWeight: "bold" }}>+91</span>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    alignItems: "center",
+                    marginBottom: "15px",
+                  }}
+                >
+                  <span style={{ fontSize: "18px", fontWeight: "bold" }}>
+                    +91
+                  </span>
                   <input
                     type="text"
                     placeholder="10 digit number"
@@ -123,28 +144,40 @@ const Login = () => {
               </form>
             )}
 
-            <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
+            <div
+              style={{
+                marginTop: "20px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                alignItems: "center",
+              }}
+            >
               <div style={{ display: "flex", gap: "10px", width: "100%" }}>
-                <GoogleLogin 
-                  onSuccess={handleGoogleSuccess} 
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
                   onError={() => setMessage("Google Login failed")}
                   theme="filled_black"
                   shape="pill"
                 />
-                <button 
-                  onClick={() => setLoginMethod(loginMethod === "email" ? "phone" : "email")}
-                  style={{ 
-                    flex: 1, 
-                    background: "white", 
-                    color: "black", 
-                    fontSize: "12px", 
+                <button
+                  onClick={() =>
+                    setLoginMethod(loginMethod === "email" ? "phone" : "email")
+                  }
+                  style={{
+                    flex: 1,
+                    background: "white",
+                    color: "black",
+                    fontSize: "12px",
                     padding: "0 10px",
                     height: "40px",
                     borderRadius: "20px",
-                    border: "1px solid #ddd"
+                    border: "1px solid #ddd",
                   }}
                 >
-                  {loginMethod === "email" ? "Sign in with phone" : "Sign in with email"}
+                  {loginMethod === "email"
+                    ? "Sign in with phone"
+                    : "Sign in with email"}
                 </button>
               </div>
             </div>
@@ -155,12 +188,17 @@ const Login = () => {
           <div className="fade-in" style={{ textAlign: "center" }}>
             <div style={{ fontSize: "50px", marginBottom: "20px" }}>✉️</div>
             <p style={{ fontSize: "16px", lineHeight: "1.6" }}>
-              A secure login link has been sent to <strong>{email}</strong>. 
+              A secure login link has been sent to <strong>{email}</strong>.
               Please check your inbox (and spam) to continue.
             </p>
-            <button 
-              onClick={() => setStep("input")} 
-              style={{ background: "transparent", border: "1px solid white", marginTop: "20px", color: "white" }}
+            <button
+              onClick={() => setStep("input")}
+              style={{
+                background: "transparent",
+                border: "1px solid white",
+                marginTop: "20px",
+                color: "white",
+              }}
             >
               Back
             </button>
@@ -170,7 +208,8 @@ const Login = () => {
         {step === "otp" && (
           <form onSubmit={verifyPhoneOtp} className="fade-in">
             <p style={{ fontSize: "14px", marginBottom: "20px", opacity: 0.7 }}>
-              Enter the 6-digit OTP sent to <strong>+91 {phoneNumber}</strong> via WhatsApp.
+              Enter the 6-digit OTP sent to <strong>+91 {phoneNumber}</strong>{" "}
+              via WhatsApp.
             </p>
             <input
               type="text"
@@ -180,10 +219,14 @@ const Login = () => {
               required
             />
             <button type="submit">Verify OTP</button>
-            <p 
-              className="resend" 
+            <p
+              className="resend"
               onClick={() => setStep("input")}
-              style={{ marginTop: "15px", cursor: "pointer", textDecoration: "underline" }}
+              style={{
+                marginTop: "15px",
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
             >
               Change phone number
             </p>
