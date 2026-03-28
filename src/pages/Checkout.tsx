@@ -119,7 +119,7 @@ const Checkout = () => {
       const token = localStorage.getItem("token");
 
       const { data } = await axios.post(
-        "http://localhost:5000/api/orders",
+        "https://preppy-back-end.onrender.com/api/orders",
         {
           items: cart.map((item) => ({
             productId: item._id,
@@ -146,7 +146,7 @@ const Checkout = () => {
         handler: async function (response: any) {
           try {
             const verifyRes = await axios.post(
-              "http://localhost:5000/api/orders/verify",
+              "https://preppy-back-end.onrender.com/api/orders/verify",
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -158,7 +158,7 @@ const Checkout = () => {
             if (verifyRes.data.success) {
               // 💾 SAVE ADDRESS TO PROFILE
               await axios.put(
-                "http://localhost:5000/api/users/profile",
+                "https://preppy-back-end.onrender.com/api/users/profile",
                 { addressBook: shippingAddress },
                 { headers: { Authorization: `Bearer ${token}` } }
               );

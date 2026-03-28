@@ -16,7 +16,7 @@ const AdminOrders = () => {
     const token = localStorage.getItem("token");
 
     const res = await axios.get(
-      "http://localhost:5000/api/admin/orders",
+      "https://preppy-back-end.onrender.com/api/admin/orders",
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -29,7 +29,7 @@ const AdminOrders = () => {
     const token = localStorage.getItem("token");
 
     await axios.put(
-      `http://localhost:5000/api/admin/orders/${id}`,
+      `https://preppy-back-end.onrender.com/api/admin/orders/${id}`,
       { paymentStatus: status },
       { headers: { Authorization: `Bearer ${token}` } }
     );

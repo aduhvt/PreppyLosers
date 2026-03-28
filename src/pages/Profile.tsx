@@ -17,7 +17,7 @@ const Profile = () => {
       const token = localStorage.getItem("token");
 
       await axios.put(
-        "http://localhost:5000/api/users/profile",
+        "https://preppy-back-end.onrender.com/api/users/profile",
         { name },
         {
           headers: { Authorization: `Bearer ${token}` },

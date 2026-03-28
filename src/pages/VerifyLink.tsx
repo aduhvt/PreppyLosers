@@ -19,7 +19,7 @@ const VerifyLink = () => {
       }
 
       try {
-        const res = await axios.get(`http://localhost:5000/api/auth/verify-link?token=${token}`);
+        const res = await axios.get(`https://preppy-back-end.onrender.com/api/auth/verify-link?token=${token}`);
         
         // Use the context login to set user and fetch profile
         await login(res.data.token);

@@ -26,7 +26,7 @@ const Orders = () => {
         const token = localStorage.getItem("token");
 
         const res = await axios.get(
-          "http://localhost:5000/api/orders/my",
+          "https://preppy-back-end.onrender.com/api/orders/my",
           {
             headers: {
               Authorization: `Bearer ${token}`,

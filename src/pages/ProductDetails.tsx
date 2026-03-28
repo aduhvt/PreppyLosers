@@ -37,7 +37,7 @@ const ProductDetails = () => {
   }, []);
 
   const fetchProduct = async () => {
-    const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+    const res = await axios.get(`https://preppy-back-end.onrender.com/api/products/${id}`);
     setProduct(res.data);
   };
 

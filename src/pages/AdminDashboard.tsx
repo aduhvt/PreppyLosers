@@ -46,7 +46,7 @@ const AdminDashboard = () => {
         sizeStock: sizeStock,
       };
 
-      await axios.post("http://localhost:5000/api/products", productData, {
+      await axios.post("https://preppy-back-end.onrender.com/api/products", productData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
