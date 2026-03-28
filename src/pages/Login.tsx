@@ -17,7 +17,7 @@ const Login = () => {
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
-      const res = await axios.post("http://:5000/api/auth/google", {
+      const res = await axios.post("https://preppy-back-end.onrender.com/api/auth/google", {
         token: credentialResponse.credential,
       });
 
@@ -33,7 +33,7 @@ const Login = () => {
     if (e) e.preventDefault();
 
     try {
-      const res = await axios.post("http://:5000/api/auth/send-otp", {
+      const res = await axios.post("https://preppy-back-end.onrender.com/api/auth/send-otp", {
         email,
       });
 
@@ -41,7 +41,7 @@ const Login = () => {
       setStep("sent");
     } catch (error: any) {
       console.error("Frontend error:", error);
-      setMessage("Failed to send login link");
+      setMessage(error.response?.data?.error || "Failed to send login link");
     }
   };
 
@@ -54,7 +54,7 @@ const Login = () => {
     }
 
     try {
-      const res = await axios.post("http://:5000/api/auth/send-phone-otp", {
+      const res = await axios.post("https://preppy-back-end.onrender.com/api/auth/send-phone-otp", {
         phoneNumber: `+91${phoneNumber}`,
       });
 
@@ -62,7 +62,7 @@ const Login = () => {
       setStep("otp");
     } catch (error: any) {
       console.error("Phone OTP Error:", error);
-      setMessage("Failed to send WhatsApp OTP");
+      setMessage(error.response?.data?.error || "Failed to send WhatsApp OTP");
     }
   };
 
@@ -70,7 +70,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://:5000/api/auth/verify-phone-otp", {
+      const res = await axios.post("https://preppy-back-end.onrender.com/api/auth/verify-phone-otp", {
         phoneNumber: `+91${phoneNumber}`,
         otp,
       });

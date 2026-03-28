@@ -117,7 +117,7 @@ app.post("/api/auth/send-otp", async (req, res) => {
     res.json({ message: "Magic link sent successfully" });
   } catch (error) {
     console.error("SEND MAGIC LINK ERROR:", error);
-    res.status(500).json({ error: "Failed to send magic link" });
+    res.status(500).json({ error: error.message || "Failed to send magic link" });
   }
 });
 
