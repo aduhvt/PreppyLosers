@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import SmoothRotatingLogo from "../components/SmoothRotatingLogo";
+import "./Cart.css";
 
 interface CartItem {
   _id: string;
@@ -11,9 +14,11 @@ interface CartItem {
 }
 
 const Cart = () => {
-  const navigate = useNavigate(); // ✅ correct hook placement
-
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [logoVisible, setLogoVisible] = useState(true);
 
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
@@ -25,6 +30,7 @@ const Cart = () => {
     updatedCart.splice(index, 1);
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
+    window.dispatchEvent(new Event("cartUpdated"));
   };
 
   const updateQuantity = (index: number, newQuantity: number) => {
@@ -34,155 +40,111 @@ const Cart = () => {
     updatedCart[index].quantity = newQuantity;
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
+    window.dispatchEvent(new Event("cartUpdated"));
   };
 
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.heading}>Your Cart 🛒</h1>
+    <div className="cart-container">
+      {/* MINIMALIST HEADER */}
+      <header className="cart-header">
+        <div className="cart-header-left" style={{ position: 'relative', width: '200px' }}>
+          <SmoothRotatingLogo isVisible={logoVisible} />
+        </div>
 
-      {cart.length === 0 ? (
-        <p style={{ opacity: 0.6 }}>Your cart is empty.</p>
-      ) : (
-        <>
-          <div style={styles.cartList}>
-            {cart.map((item, index) => (
-              <div key={index} style={styles.card}>
-                <img
-                  src={item.images[0]}
-                  alt={item.name}
-                  style={styles.image}
-                />
+        <div className="cart-header-center">
+          <h1>Preppy Losers</h1>
+        </div>
 
-                <div style={styles.details}>
-                  <h3>{item.name}</h3>
-                  <p>Size: {item.selectedSize}</p>
-                  <p>₹ {item.price}</p>
-
-                  <div style={styles.quantity}>
-                    <button
-                      onClick={() => updateQuantity(index, item.quantity - 1)}
-                      style={styles.qtyBtn}
-                    >
-                      -
-                    </button>
-
-                    <span>{item.quantity}</span>
-
-                    <button
-                      onClick={() => updateQuantity(index, item.quantity + 1)}
-                      style={styles.qtyBtn}
-                    >
-                      +
-                    </button>
-                  </div>
+        <div className="cart-header-right">
+          {user ? (
+            <div className="avatar-wrapper" onClick={() => setDropdownOpen(!dropdownOpen)}>
+              <div className="avatar-circle">{user.name?.charAt(0).toUpperCase()}</div>
+              {dropdownOpen && (
+                <div className="dropdown">
+                  <Link to="/profile">Profile</Link>
+                  <Link to="/orders">Orders</Link>
+                  <div onClick={logout}>Logout</div>
                 </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className="cart-login-btn">Sign In</Link>
+          )}
+        </div>
+      </header>
 
-                <button
-                  onClick={() => removeItem(index)}
-                  style={styles.removeBtn}
-                >
-                  ✕
-                </button>
+      {/* CART CONTENT */}
+      <main className="cart-content">
+        <h2 className="cart-title">Shopping Bag</h2>
+
+        {cart.length === 0 ? (
+          <div className="empty-cart-message">
+            <p>Your shopping bag is currently empty.</p>
+            <Link to="/products" className="back-to-shop-btn">Continue Shopping</Link>
+          </div>
+        ) : (
+          <>
+            <div className="cart-items-list">
+              {cart.map((item, index) => (
+                <div key={`${item._id}-${index}`} className="cart-item-card">
+                  <img
+                    src={item.images[0]}
+                    alt={item.name}
+                    className="cart-item-image"
+                  />
+
+                  <div className="cart-item-details">
+                    <h3 className="cart-item-name">{item.name}</h3>
+                    <p className="cart-item-info">Size: {item.selectedSize || 'N/A'}</p>
+                    <p className="cart-item-price">₹ {item.price}</p>
+
+                    <div className="cart-item-quantity-controls">
+                      <button
+                        onClick={() => updateQuantity(index, item.quantity - 1)}
+                        className="qty-control-btn"
+                      >
+                        -
+                      </button>
+                      <span className="qty-value">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(index, item.quantity + 1)}
+                        className="qty-control-btn"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => removeItem(index)}
+                    className="cart-item-remove-btn"
+                    title="Remove item"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="cart-summary-section">
+              <div className="cart-total-display">
+                <span>Total:</span>
+                <span style={{ marginLeft: '20px' }}>₹ {total}</span>
               </div>
-            ))}
-          </div>
-
-          <div style={styles.summary}>
-            <h2>Total: ₹ {total}</h2>
-            <button
-              style={styles.checkoutBtn}
-              onClick={() => navigate("/checkout")}
-            >
-              Proceed to Checkout
-            </button>
-          </div>
-        </>
-      )}
+              <button
+                className="cart-checkout-button"
+                onClick={() => navigate("/checkout")}
+              >
+                Proceed to Checkout
+              </button>
+            </div>
+          </>
+        )}
+      </main>
     </div>
   );
-};
-
-const styles: any = {
-  container: {
-    padding: "60px",
-    color: "white",
-    minHeight: "100vh",
-    background: "#0e0e0e",
-  },
-
-  heading: {
-    marginBottom: "40px",
-    fontSize: "40px",
-  },
-
-  cartList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-  },
-
-  card: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    background: "#151515",
-    padding: "20px",
-    borderRadius: "16px",
-    boxShadow: "0 0 20px rgba(0,0,0,0.4)",
-  },
-
-  image: {
-    width: "120px",
-    height: "120px",
-    objectFit: "cover",
-    borderRadius: "12px",
-  },
-
-  details: {
-    flex: 1,
-    marginLeft: "20px",
-  },
-
-  quantity: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    marginTop: "10px",
-  },
-
-  qtyBtn: {
-    background: "#222",
-    border: "none",
-    color: "white",
-    padding: "6px 12px",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-
-  removeBtn: {
-    background: "transparent",
-    border: "none",
-    color: "red",
-    fontSize: "20px",
-    cursor: "pointer",
-  },
-
-  summary: {
-    marginTop: "40px",
-    textAlign: "right",
-  },
-
-  checkoutBtn: {
-    marginTop: "15px",
-    padding: "12px 24px",
-    background: "white",
-    color: "black",
-    borderRadius: "8px",
-    border: "none",
-    cursor: "pointer",
-  },
 };
 
 export default Cart;

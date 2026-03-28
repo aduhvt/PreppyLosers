@@ -1,0 +1,66 @@
+.splash-outer-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+  background: transparent;
+}
+
+.splash-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  transition: opacity 1s ease-in-out;
+  z-index: 1;
+}
+
+.splash-overlay.fade-out {
+  opacity: 0;
+}
+
+.splash-logo-container {
+  opacity: 0;
+  position: fixed;
+  z-index: 10000;
+  pointer-events: auto;
+  
+  /* REVERTED: Working 2X Center Spawn */
+  width: 400px;
+  height: 400px;
+  top: calc(50% - 200px);
+  left: calc(50% - 200px);
+  
+  transition: 
+    opacity 0.8s ease-in-out,
+    top 2.5s cubic-bezier(0.77, 0, 0.175, 1),
+    left 2.5s cubic-bezier(0.77, 0, 0.175, 1),
+    width 2.5s cubic-bezier(0.77, 0, 0.175, 1),
+    height 2.5s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.splash-logo-container.fade-in {
+  opacity: 1;
+}
+
+.splash-logo-container.transition {
+  opacity: 1;
+  /* Aligned with Navbar Logo: 30px (paddingTop) + 47px (navbar center) - 100px (half height) = -23px */
+  width: 200px;
+  height: 200px;
+  top: -23px;
+  left: 60px;
+}
+
+.splash-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}

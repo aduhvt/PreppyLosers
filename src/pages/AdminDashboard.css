@@ -1,0 +1,161 @@
+.admin-dashboard {
+  background: #0e0e0e;
+  min-height: 100vh;
+  padding: 120px 20px 80px;
+  color: white;
+  font-family: 'Inter', sans-serif;
+}
+
+.admin-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.admin-dashboard h1 {
+  font-size: 32px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  opacity: 0.6;
+  margin-bottom: 40px;
+}
+
+.product-form {
+  background: #151515;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.form-group {
+  margin-bottom: 25px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #888;
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+  background: #222;
+  border: 1px solid #333;
+  padding: 12px 16px;
+  color: white;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+input:focus,
+textarea:focus {
+  border-color: white;
+  outline: none;
+  background: #282828;
+}
+
+.size-stock-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #222;
+}
+
+.size-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.size-counter {
+  background: #222;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.size-label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.counter-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.counter-controls button {
+  background: white;
+  color: black;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.counter-controls button:hover {
+  transform: scale(1.1);
+}
+
+.featured-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 30px 0;
+  cursor: pointer;
+}
+
+.featured-toggle input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.save-btn {
+  width: 100%;
+  padding: 18px;
+  background: white;
+  color: black;
+  border: none;
+  border-radius: 6px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+}
+
+.save-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(255,255,255,0.1);
+  background: #f0f0f0;
+}

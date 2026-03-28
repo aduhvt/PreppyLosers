@@ -4,10 +4,8 @@ import hero from "../assets/hero.jpg";
 import "./Home.css";
 import WhatsAppWidget from '../components/WhatsappWidget/WhatsAppWidget';
 
-
 const Home = () => {
   const navigate = useNavigate();
-  
 
   return (
     <div style={styles.container}>
@@ -40,7 +38,6 @@ const styles: any = {
     width: "100%",
     overflow: "hidden",
   },
-
   background: {
     position: "absolute",
     top: 0,
@@ -52,13 +49,11 @@ const styles: any = {
     backgroundPosition: "center",
     zIndex: 0,
   },
-
   navWrapper: {
     position: "relative",
     zIndex: 2,
-    paddingTop: "80px", // 👈 adds gap above navbar
+    paddingTop: "30px",
   },
-
   overlay: {
     position: "absolute",
     top: 0,
@@ -74,14 +69,11 @@ const styles: any = {
     color: "white",
     zIndex: 1,
   },
-
   brandTitle: {
     fontSize: "clamp(40px, 6vw, 80px)",
     letterSpacing: "8px",
     marginBottom: "20px",
-    
   },
-
   tagline: {
     fontSize: "18px",
     opacity: 0.85,

@@ -1,10 +1,11 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./ProductDetails.css";
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -70,6 +71,9 @@ const ProductDetails = () => {
 
   return (
     <div style={styles.container}>
+      <button className="go-to-cart-btn" onClick={() => navigate("/cart")}>
+        GO TO CART →
+      </button>
       {product && (
         <div style={styles.wrapper}>
           {/* LEFT - Product Image */}
@@ -135,6 +139,7 @@ const styles: any = {
     color: "white",
     minHeight: "100vh",
     padding: "80px 60px",
+    position: "relative",
   },
 
   wrapper: {

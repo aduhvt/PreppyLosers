@@ -13,7 +13,7 @@ interface CartItem {
 }
 
 const Checkout = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showLogout, setShowLogout] = useState(false);
   const [differentBilling, setDifferentBilling] = useState(false);
@@ -44,8 +44,21 @@ const Checkout = () => {
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
     setCart(storedCart);
+    
     if (user) {
-      setDeliveryAddress((prev) => ({ ...prev, email: user.email }));
+      const nameParts = user.addressBook?.fullName?.split(" ") || ["", ""];
+      setDeliveryAddress((prev) => ({
+        ...prev,
+        email: user.email,
+        firstName: nameParts[0] || user.name || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        address: user.addressBook?.address || "",
+        apartment: user.addressBook?.apartment || "",
+        city: user.addressBook?.city || "",
+        pincode: user.addressBook?.pincode || "",
+        phone: user.addressBook?.phone || "",
+        country: user.addressBook?.country || "India",
+      }));
     }
   }, [user]);
 
@@ -81,7 +94,7 @@ const Checkout = () => {
     }
 
     const shippingAddress = {
-      fullName: `${deliveryAddress.firstName} ${deliveryAddress.lastName}`,
+      fullName: `${deliveryAddress.firstName} ${deliveryAddress.lastName}`.trim(),
       address: deliveryAddress.address,
       city: deliveryAddress.city,
       pincode: deliveryAddress.pincode,
@@ -90,15 +103,17 @@ const Checkout = () => {
       apartment: deliveryAddress.apartment,
     };
 
-    const billingAddr = differentBilling ? {
-      fullName: `${billingAddress.firstName} ${billingAddress.lastName}`,
-      address: billingAddress.address,
-      city: billingAddress.city,
-      pincode: billingAddress.pincode,
-      phone: billingAddress.phone,
-      country: billingAddress.country,
-      apartment: billingAddress.apartment,
-    } : shippingAddress;
+    const billingAddr = differentBilling
+      ? {
+          fullName: `${billingAddress.firstName} ${billingAddress.lastName}`.trim(),
+          address: billingAddress.address,
+          city: billingAddress.city,
+          pincode: billingAddress.pincode,
+          phone: billingAddress.phone,
+          country: billingAddress.country,
+          apartment: billingAddress.apartment,
+        }
+      : shippingAddress;
 
     try {
       const token = localStorage.getItem("token");
@@ -141,6 +156,14 @@ const Checkout = () => {
             );
 
             if (verifyRes.data.success) {
+              // 💾 SAVE ADDRESS TO PROFILE
+              await axios.put(
+                "http://localhost:5000/api/users/profile",
+                { addressBook: shippingAddress },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              await refreshUser();
+
               alert("Payment Successful! Order Placed 🔥");
               localStorage.removeItem("cart");
               window.location.href = "/orders";
@@ -151,7 +174,7 @@ const Checkout = () => {
           }
         },
         prefill: {
-          name: `${deliveryAddress.firstName} ${deliveryAddress.lastName}`,
+          name: shippingAddress.fullName,
           contact: deliveryAddress.phone,
           email: deliveryAddress.email,
         },
