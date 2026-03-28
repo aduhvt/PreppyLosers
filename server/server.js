@@ -38,7 +38,11 @@ const adminOnly = (req, res, next) => {
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: "https://preppylosers.com",
+  credentials: true
+}));
+
 app.use(express.json());
 
 mongoose
@@ -67,7 +71,7 @@ app.post("/api/auth/send-otp", async (req, res) => {
       { expiresIn: "15m" },
     );
 
-    const magicLink = `http://localhost:5173/verify?token=${magicToken}`;
+   const magicLink = `https://preppylosers.com/verify?token=${magicToken}`;
 
     console.log("Attempting to send email via Resend...");
     const emailRes = await resend.emails.send({
@@ -285,8 +289,10 @@ app.get("/api/auth/verify-link", async (req, res) => {
   }
 });
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 const authenticate = (req, res, next) => {
