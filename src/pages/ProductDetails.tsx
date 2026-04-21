@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./ProductDetails.css";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ const ProductDetails = () => {
   }, []);
 
   const fetchProduct = async () => {
-    const res = await axios.get(`https://preppy-back-end.onrender.com/api/products/${id}`);
+    const res = await axios.get(`${API_URL}/api/products/${id}`);
     setProduct(res.data);
   };
 

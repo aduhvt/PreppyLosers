@@ -27,6 +27,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const AuthProvider = ({ children }: any) => {
   const [user, setUser] = useState<User | null>(null);
 
@@ -34,7 +36,7 @@ export const AuthProvider = ({ children }: any) => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        const { data } = await axios.get("https://preppy-back-end.onrender.com/api/users/profile", {
+        const { data } = await axios.get(`${API_URL}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(data);

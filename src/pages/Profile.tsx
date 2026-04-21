@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const Profile = () => {
   const { user } = useAuth();
   const [name, setName] = useState("");
@@ -17,7 +19,7 @@ const Profile = () => {
       const token = localStorage.getItem("token");
 
       await axios.put(
-        "https://preppy-back-end.onrender.com/api/users/profile",
+        `${API_URL}/api/users/profile`,
         { name },
         {
           headers: { Authorization: `Bearer ${token}` },

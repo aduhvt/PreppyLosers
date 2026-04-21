@@ -3,6 +3,8 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import "./Products.css";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 interface Product {
   _id: string;
   name: string;
@@ -17,7 +19,7 @@ const Products = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const res = await axios.get("https://preppy-back-end.onrender.com/api/products");
+      const res = await axios.get(`${API_URL}/api/products`);
       setProducts(res.data);
     };
 

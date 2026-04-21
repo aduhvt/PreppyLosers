@@ -205,14 +205,17 @@ app.post("/api/auth/google", async (req, res) => {
   try {
     const { token } = req.body;
 
-    // Verify the Google ID token
-    const ticket = await googleClient.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
+    // Fetch user info using the access_token
+    const googleResponse = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
+    
+    if (!googleResponse.ok) {
+      throw new Error("Failed to fetch user info from Google");
+    }
 
-    const payload = ticket.getPayload();
-    const { email, name, picture } = payload;
+    const payload = await googleResponse.json();
+    const { email, name } = payload;
 
     // Find or create user
     let user = await User.findOne({ email });
@@ -221,29 +224,19 @@ app.post("/api/auth/google", async (req, res) => {
       user = await User.create({
         email,
         name: name || "",
-        // Role defaults to 'user' in the schema
       });
     } else if (!user.name && name) {
-      // If user exists but has no name, update it
       user.name = name;
       await user.save();
     }
 
-    // Generate long-term JWT (7 days)
     const authToken = jwt.sign(
-      {
-        userId: user._id,
-        email: user.email,
-        role: user.role,
-      },
+      { userId: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
 
-    res.json({
-      message: "Google login successful",
-      token: authToken,
-    });
+    res.json({ message: "Google login successful", token: authToken });
   } catch (error) {
     console.error("GOOGLE AUTH ERROR:", error);
     res.status(401).json({ message: "Invalid Google token" });

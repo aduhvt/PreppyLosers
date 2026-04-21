@@ -3,6 +3,10 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+const API_URL = import.meta.env.VITE_API_URL;
+
 const VerifyLink = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -19,19 +23,24 @@ const VerifyLink = () => {
       }
 
       try {
-        const res = await axios.get(`https://preppy-back-end.onrender.com/api/auth/verify-link?token=${token}`);
-        
+        const res = await axios.get(
+          `${API_URL}/api/auth/verify-link?token=${token}`,
+        );
+
         // Use the context login to set user and fetch profile
         await login(res.data.token);
-        
+
         setStatus("Success! Redirecting...");
-        
+
         setTimeout(() => {
           navigate("/");
         }, 1500);
       } catch (error: any) {
         console.error("Verification failed", error);
-        setStatus(error.response?.data?.message || "Link verification failed. It may have expired.");
+        setStatus(
+          error.response?.data?.message ||
+            "Link verification failed. It may have expired.",
+        );
       }
     };
 
@@ -61,7 +70,7 @@ const styles: any = {
     alignItems: "center",
     justifyContent: "center",
     color: "white",
-    fontFamily: "Inter, sans-serif"
+    fontFamily: "Inter, sans-serif",
   },
   card: {
     background: "#151515",
@@ -70,16 +79,16 @@ const styles: any = {
     textAlign: "center",
     maxWidth: "400px",
     width: "100%",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
   },
   title: {
     letterSpacing: "4px",
-    marginBottom: "30px"
+    marginBottom: "30px",
   },
   status: {
     fontSize: "18px",
     marginBottom: "20px",
-    opacity: 0.9
+    opacity: 0.9,
   },
   button: {
     background: "white",
@@ -89,8 +98,8 @@ const styles: any = {
     borderRadius: "6px",
     fontWeight: "bold",
     cursor: "pointer",
-    marginTop: "10px"
-  }
+    marginTop: "10px",
+  },
 };
 
 export default VerifyLink;

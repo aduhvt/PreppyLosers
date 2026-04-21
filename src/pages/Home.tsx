@@ -19,7 +19,7 @@ const Home = () => {
 
       {/* Hero Content */}
       <div style={styles.overlay}>
-        <h1 style={styles.brandTitle}></h1>
+        <h1 style={styles.brandTitle}>PREPPY LOSERS</h1>
         <p style={styles.tagline}>Underground street culture for the bold.</p>
 
         <button className="shop-button" onClick={() => navigate("/products")}>
