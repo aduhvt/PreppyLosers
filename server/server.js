@@ -205,16 +205,12 @@ app.post("/api/auth/google", async (req, res) => {
   try {
     const { token } = req.body;
 
-    // Fetch user info using the access_token
-    const googleResponse = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo`, {
-      headers: { Authorization: `Bearer ${token}` }
+    // Verify token using google-auth-library
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
-    
-    if (!googleResponse.ok) {
-      throw new Error("Failed to fetch user info from Google");
-    }
-
-    const payload = await googleResponse.json();
+    const payload = ticket.getPayload();
     const { email, name } = payload;
 
     // Find or create user
