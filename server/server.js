@@ -108,9 +108,43 @@ app.use(cors({
 
 app.use(express.json());
 
+const dropIndexIfExists = async (collection, indexName) => {
+  try {
+    await collection.dropIndex(indexName);
+  } catch (error) {
+    if (error.codeName !== "IndexNotFound" && error.code !== 27) {
+      throw error;
+    }
+  }
+};
+
+const ensureUserIndexes = async () => {
+  await dropIndexIfExists(User.collection, "email_1");
+  await dropIndexIfExists(User.collection, "phoneNumber_1");
+
+  await User.collection.createIndex(
+    { email: 1 },
+    {
+      unique: true,
+      partialFilterExpression: { email: { $type: "string" } },
+    },
+  );
+
+  await User.collection.createIndex(
+    { phoneNumber: 1 },
+    {
+      unique: true,
+      partialFilterExpression: { phoneNumber: { $type: "string" } },
+    },
+  );
+};
+
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
+  .then(async () => {
+    await ensureUserIndexes();
+    console.log("MongoDB Connected");
+  })
   .catch((err) => console.log(err));
 
 const resend = new Resend(process.env.RESEND_API_KEY);

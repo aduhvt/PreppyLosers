@@ -102,7 +102,11 @@ const Login = () => {
       setMessageType("success");
       setIsOtpVisible(true);
     } catch (error: any) {
-      console.error("Phone OTP Error:", error);
+      console.error("Phone OTP Error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
       setOtp("");
       setIsOtpVisible(true);
       setMessage(getErrorMessage(error, "Failed to send OTP"));

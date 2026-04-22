@@ -3,13 +3,11 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
-    unique: true,
-    sparse: true, // Allows nulls to be unique
+    default: undefined,
   },
   phoneNumber: {
     type: String,
-    unique: true,
-    sparse: true,
+    default: undefined,
   },
   otp: String,
   otpExpires: Date,
@@ -38,5 +36,21 @@ const userSchema = new mongoose.Schema({
     apartment: String,
   },
 });
+
+userSchema.index(
+  { email: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { email: { $type: "string" } },
+  },
+);
+
+userSchema.index(
+  { phoneNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { phoneNumber: { $type: "string" } },
+  },
+);
 
 module.exports = mongoose.model("User", userSchema);
