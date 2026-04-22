@@ -29,6 +29,24 @@ const twilioClient = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
+const sendTwilioOtp = (phone) => {
+  return twilioClient.verify.v2
+    .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+    .verifications.create({
+      to: phone,
+      channel: "sms",
+    });
+};
+
+const verifyTwilioOtp = (phone, otp) => {
+  return twilioClient.verify.v2
+    .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+    .verificationChecks.create({
+      to: phone,
+      code: otp,
+    });
+};
+
 const adminOnly = (req, res, next) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({ message: "Access denied" });
@@ -121,6 +139,35 @@ app.post("/api/auth/send-otp", async (req, res) => {
   }
 });
 
+app.post("/send-otp", async (req, res) => {
+  const { phone } = req.body;
+
+  try {
+    await sendTwilioOtp(phone);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
+});
+
+app.post("/verify-otp", async (req, res) => {
+  const { phone, otp } = req.body;
+
+  try {
+    const verification_check = await verifyTwilioOtp(phone, otp);
+
+    if (verification_check.status === "approved") {
+      return res.json({ success: true });
+    }
+
+    res.status(400).json({ error: "Invalid OTP" });
+  } catch (err) {
+    res.status(500).json({ error: "Verification failed" });
+  }
+});
+
 // 📱 SEND PHONE OTP (WHATSAPP)
 app.post("/api/auth/send-phone-otp", async (req, res) => {
   try {
@@ -132,36 +179,12 @@ app.post("/api/auth/send-phone-otp", async (req, res) => {
       user = await User.create({ phoneNumber });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const crypto = require("crypto");
+    await sendTwilioOtp(phoneNumber);
 
-    // Hash OTP before saving to DB
-    user.otp = crypto.createHash("sha256").update(otp).digest("hex");
-    user.otpExpires = Date.now() + 5 * 60 * 1000; // 5 mins expiry
-    await user.save();
-
-    console.log(`[WhatsApp Simulation] Sending OTP ${otp} to ${phoneNumber}`);
-
-    // 📱 Twilio WhatsApp Integration
-    try {
-      await twilioClient.messages.create({
-        body: `Your Preppy Losers login OTP is ${otp}`,
-        from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
-        to: `whatsapp:${phoneNumber}`,
-      });
-      console.log(`WhatsApp OTP sent successfully to ${phoneNumber}`);
-    } catch (twilioError) {
-      console.error("Twilio WhatsApp Error:", twilioError);
-      return res.status(400).json({ 
-        error: "Twilio failed to send message", 
-        details: twilioError.message 
-      });
-    }
-
-    res.json({ message: "OTP sent to WhatsApp" });
+    res.json({ message: "OTP sent successfully" });
   } catch (error) {
     console.error("SEND PHONE OTP ERROR:", error);
-    res.status(500).json({ error: "Failed to send WhatsApp OTP" });
+    res.status(500).json({ error: "Failed to send OTP" });
   }
 });
 
@@ -170,22 +193,17 @@ app.post("/api/auth/verify-phone-otp", async (req, res) => {
   try {
     const { phoneNumber, otp } = req.body;
 
-    const user = await User.findOne({ phoneNumber });
+    const verification_check = await verifyTwilioOtp(phoneNumber, otp);
 
-    if (!user) return res.status(400).json({ message: "User not found" });
-
-    const crypto = require("crypto");
-    const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
-
-    if (user.otp !== hashedOtp)
+    if (verification_check.status !== "approved") {
       return res.status(400).json({ message: "Invalid OTP" });
-    if (user.otpExpires < Date.now())
-      return res.status(400).json({ message: "OTP expired" });
+    }
 
-    // Clear OTP
-    user.otp = null;
-    user.otpExpires = null;
-    await user.save();
+    let user = await User.findOne({ phoneNumber });
+
+    if (!user) {
+      user = await User.create({ phoneNumber });
+    }
 
     const token = jwt.sign(
       { userId: user._id, phoneNumber: user.phoneNumber, role: user.role },
