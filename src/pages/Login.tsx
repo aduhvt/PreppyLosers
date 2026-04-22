@@ -14,8 +14,13 @@ const Login = () => {
   const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
   const [step, setStep] = useState<"input" | "sent" | "otp">("input");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  const formattedPhoneNumber = `+91${phoneNumber}`;
 
   const handleGoogleSuccess = async (response: any) => {
     try {
@@ -51,7 +56,7 @@ const Login = () => {
     }
   };
 
-  const sendPhoneOtp = async (e?: React.FormEvent) => {
+  const sendPhoneOtp = async (e?: React.FormEvent, resend = false) => {
     if (e) e.preventDefault();
 
     if (phoneNumber.length !== 10 || !/^\d+$/.test(phoneNumber)) {
@@ -60,11 +65,16 @@ const Login = () => {
     }
 
     try {
-      const res = await axios.post(`${API_URL}/api/auth/send-phone-otp`, {
-        phoneNumber: `+91${phoneNumber}`,
+      setIsSendingOtp(true);
+      setMessage("");
+
+      await axios.post(`${API_URL}/send-otp`, {
+        phone: formattedPhoneNumber,
       });
 
-      setMessage(res.data.message);
+      setOtp("");
+      setMessage(resend ? "OTP resent successfully" : "OTP sent successfully");
+      setMessageType("success");
       setStep("otp");
     } catch (error: any) {
       console.error("Phone OTP Error:", error);
@@ -73,26 +83,43 @@ const Login = () => {
           error.response?.data?.error ||
           "Failed to send OTP"
       );
+      setMessageType("error");
+    } finally {
+      setIsSendingOtp(false);
     }
   };
 
   const verifyPhoneOtp = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+      setMessage("Enter the 6-digit OTP");
+      setMessageType("error");
+      return;
+    }
+
     try {
-      const res = await axios.post(`${API_URL}/api/auth/verify-phone-otp`, {
-        phoneNumber: `+91${phoneNumber}`,
+      setIsVerifyingOtp(true);
+      setMessage("");
+
+      const res = await axios.post(`${API_URL}/verify-otp`, {
+        phone: formattedPhoneNumber,
         otp,
       });
 
       await login(res.data.token);
       navigate("/");
     } catch (error: any) {
+      setOtp("");
       setMessage(
         error.response?.data?.details ||
+          error.response?.data?.error ||
           error.response?.data?.message ||
-          "Invalid OTP"
+          "The OTP you entered is wrong"
       );
+      setMessageType("error");
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -154,7 +181,9 @@ const Login = () => {
                     style={{ marginBottom: 0 }}
                   />
                 </div>
-                <button type="submit">Get SMS OTP</button>
+                <button type="submit" disabled={isSendingOtp}>
+                  {isSendingOtp ? "Sending..." : "Send SMS OTP"}
+                </button>
               </form>
             )}
 
@@ -228,17 +257,36 @@ const Login = () => {
             </p>
             <input
               type="text"
-              placeholder="Enter OTP"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="Enter 6-digit OTP"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
               required
             />
-            <button type="submit">Verify OTP</button>
+            <button type="submit" disabled={isVerifyingOtp}>
+              {isVerifyingOtp ? "Verifying..." : "Verify OTP"}
+            </button>
             <p
               className="resend"
-              onClick={() => setStep("input")}
+              onClick={() => sendPhoneOtp(undefined, true)}
               style={{
                 marginTop: "15px",
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Resend OTP
+            </p>
+            <p
+              className="resend"
+              onClick={() => {
+                setOtp("");
+                setMessage("");
+                setMessageType("success");
+                setStep("input");
+              }}
+              style={{
                 cursor: "pointer",
                 textDecoration: "underline",
               }}
@@ -248,7 +296,7 @@ const Login = () => {
           </form>
         )}
 
-        {message && step === "input" && <p className="message">{message}</p>}
+        {message && <p className={`message ${messageType}`}>{message}</p>}
       </div>
     </div>
   );

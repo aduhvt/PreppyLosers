@@ -198,7 +198,19 @@ app.post("/verify-otp", async (req, res) => {
     const verification_check = await verifyTwilioOtp(phone, otp);
 
     if (verification_check.status === "approved") {
-      return res.json({ success: true });
+      let user = await User.findOne({ phoneNumber: normalizePhone(phone) });
+
+      if (!user) {
+        user = await User.create({ phoneNumber: normalizePhone(phone) });
+      }
+
+      const token = jwt.sign(
+        { userId: user._id, phoneNumber: user.phoneNumber, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" },
+      );
+
+      return res.json({ success: true, token });
     }
 
     res.status(400).json({ error: "Invalid OTP" });

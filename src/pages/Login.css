@@ -93,7 +93,14 @@
 .message {
   margin-top: 18px;
   font-size: 14px;
+}
+
+.message.success {
   color: #4caf50;
+}
+
+.message.error {
+  color: #ff6b6b;
 }
 
 /* Resend */
