@@ -68,7 +68,11 @@ const Login = () => {
       setStep("otp");
     } catch (error: any) {
       console.error("Phone OTP Error:", error);
-      setMessage(error.response?.data?.error || "Failed to send WhatsApp OTP");
+      setMessage(
+        error.response?.data?.details ||
+          error.response?.data?.error ||
+          "Failed to send OTP"
+      );
     }
   };
 
@@ -84,7 +88,11 @@ const Login = () => {
       await login(res.data.token);
       navigate("/");
     } catch (error: any) {
-      setMessage(error.response?.data?.message || "Invalid OTP");
+      setMessage(
+        error.response?.data?.details ||
+          error.response?.data?.message ||
+          "Invalid OTP"
+      );
     }
   };
 
@@ -146,7 +154,7 @@ const Login = () => {
                     style={{ marginBottom: 0 }}
                   />
                 </div>
-                <button type="submit">Get SMS OTP</button>
+                <button type="submit">Send SMS OTP</button>
               </form>
             )}
 

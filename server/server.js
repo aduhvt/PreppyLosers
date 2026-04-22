@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
 const jwt = require("jsonwebtoken");
 const express = require("express");
@@ -29,22 +29,62 @@ const twilioClient = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
+const normalizePhone = (phone) => {
+  const normalizedPhone = String(phone || "").trim().replace(/[^\d+]/g, "");
+
+  if (!/^\+\d{10,15}$/.test(normalizedPhone)) {
+    const error = new Error("Phone number must include country code, for example +919876543210");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return normalizedPhone;
+};
+
+const ensureTwilioVerifyConfig = () => {
+  if (
+    !process.env.TWILIO_ACCOUNT_SID ||
+    !process.env.TWILIO_AUTH_TOKEN ||
+    !process.env.TWILIO_VERIFY_SERVICE_SID
+  ) {
+    throw new Error("Missing Twilio Verify environment variables");
+  }
+};
+
 const sendTwilioOtp = (phone) => {
+  ensureTwilioVerifyConfig();
+
   return twilioClient.verify.v2
     .services(process.env.TWILIO_VERIFY_SERVICE_SID)
     .verifications.create({
-      to: phone,
+      to: normalizePhone(phone),
       channel: "sms",
     });
 };
 
 const verifyTwilioOtp = (phone, otp) => {
+  ensureTwilioVerifyConfig();
+
   return twilioClient.verify.v2
     .services(process.env.TWILIO_VERIFY_SERVICE_SID)
     .verificationChecks.create({
-      to: phone,
+      to: normalizePhone(phone),
       code: otp,
     });
+};
+
+const sendOtpError = (res, error, fallbackMessage) => {
+  console.error(fallbackMessage, {
+    code: error.code,
+    message: error.message,
+    status: error.status,
+  });
+
+  res.status(error.statusCode || error.status || 500).json({
+    error: fallbackMessage,
+    details: error.message,
+    code: error.code,
+  });
 };
 
 const adminOnly = (req, res, next) => {
@@ -147,8 +187,7 @@ app.post("/send-otp", async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to send OTP" });
+    sendOtpError(res, err, "Failed to send OTP");
   }
 });
 
@@ -164,7 +203,7 @@ app.post("/verify-otp", async (req, res) => {
 
     res.status(400).json({ error: "Invalid OTP" });
   } catch (err) {
-    res.status(500).json({ error: "Verification failed" });
+    sendOtpError(res, err, "Verification failed");
   }
 });
 
@@ -183,8 +222,7 @@ app.post("/api/auth/send-phone-otp", async (req, res) => {
 
     res.json({ message: "OTP sent successfully" });
   } catch (error) {
-    console.error("SEND PHONE OTP ERROR:", error);
-    res.status(500).json({ error: "Failed to send OTP" });
+    sendOtpError(res, error, "Failed to send OTP");
   }
 });
 
@@ -213,8 +251,7 @@ app.post("/api/auth/verify-phone-otp", async (req, res) => {
 
     res.json({ message: "Login successful", token });
   } catch (error) {
-    console.error("VERIFY PHONE OTP ERROR:", error);
-    res.status(500).json({ error: "Verification failed" });
+    sendOtpError(res, error, "Verification failed");
   }
 });
 
