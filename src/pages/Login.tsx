@@ -154,7 +154,7 @@ const Login = () => {
                     style={{ marginBottom: 0 }}
                   />
                 </div>
-                <button type="submit">Send SMS OTP</button>
+                <button type="submit">Get SMS OTP</button>
               </form>
             )}
 
