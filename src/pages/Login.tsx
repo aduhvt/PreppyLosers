@@ -12,7 +12,8 @@ const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
-  const [step, setStep] = useState<"input" | "sent" | "otp">("input");
+  const [step, setStep] = useState<"input" | "sent">("input");
+  const [isOtpVisible, setIsOtpVisible] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [isSendingOtp, setIsSendingOtp] = useState(false);
@@ -75,7 +76,7 @@ const Login = () => {
       setOtp("");
       setMessage(resend ? "OTP resent successfully" : "OTP sent successfully");
       setMessageType("success");
-      setStep("otp");
+      setIsOtpVisible(true);
     } catch (error: any) {
       console.error("Phone OTP Error:", error);
       setMessage(
@@ -151,7 +152,7 @@ const Login = () => {
                 <button type="submit">Send Login Link</button>
               </form>
             ) : (
-              <form onSubmit={sendPhoneOtp}>
+              <form onSubmit={isOtpVisible ? verifyPhoneOtp : sendPhoneOtp}>
                 <p
                   style={{
                     fontSize: "14px",
@@ -181,9 +182,51 @@ const Login = () => {
                     style={{ marginBottom: 0 }}
                   />
                 </div>
-                <button type="submit" disabled={isSendingOtp}>
-                  {isSendingOtp ? "Sending..." : "Send SMS OTP"}
-                </button>
+                {!isOtpVisible && (
+                  <button type="submit" disabled={isSendingOtp}>
+                    {isSendingOtp ? "Sending..." : "Send SMS OTP"}
+                  </button>
+                )}
+
+                {isOtpVisible && (
+                  <>
+                    <p
+                      style={{
+                        fontSize: "14px",
+                        marginBottom: 0,
+                        opacity: 0.7,
+                      }}
+                    >
+                      Enter the 6-digit OTP sent to{" "}
+                      <strong>+91 {phoneNumber}</strong> via SMS.
+                    </p>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="Enter 6-digit OTP"
+                      value={otp}
+                      onChange={(e) =>
+                        setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                      }
+                      required
+                    />
+                    <button type="submit" disabled={isVerifyingOtp}>
+                      {isVerifyingOtp ? "Verifying..." : "Verify OTP"}
+                    </button>
+                    <p
+                      className="resend"
+                      onClick={() => sendPhoneOtp(undefined, true)}
+                      style={{
+                        marginTop: "0",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Resend OTP
+                    </p>
+                  </>
+                )}
               </form>
             )}
 
@@ -206,7 +249,13 @@ const Login = () => {
                 />
                 <button
                   onClick={() =>
-                    setLoginMethod(loginMethod === "email" ? "phone" : "email")
+                    setLoginMethod((currentMethod) => {
+                      setOtp("");
+                      setMessage("");
+                      setMessageType("success");
+                      setIsOtpVisible(false);
+                      return currentMethod === "email" ? "phone" : "email";
+                    })
                   }
                   style={{
                     width: "100%",
@@ -247,53 +296,6 @@ const Login = () => {
               Back
             </button>
           </div>
-        )}
-
-        {step === "otp" && (
-          <form onSubmit={verifyPhoneOtp} className="fade-in">
-            <p style={{ fontSize: "14px", marginBottom: "20px", opacity: 0.7 }}>
-              Enter the 6-digit OTP sent to <strong>+91 {phoneNumber}</strong>{" "}
-              via SMS.
-            </p>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="Enter 6-digit OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              required
-            />
-            <button type="submit" disabled={isVerifyingOtp}>
-              {isVerifyingOtp ? "Verifying..." : "Verify OTP"}
-            </button>
-            <p
-              className="resend"
-              onClick={() => sendPhoneOtp(undefined, true)}
-              style={{
-                marginTop: "15px",
-                cursor: "pointer",
-                textDecoration: "underline",
-              }}
-            >
-              Resend OTP
-            </p>
-            <p
-              className="resend"
-              onClick={() => {
-                setOtp("");
-                setMessage("");
-                setMessageType("success");
-                setStep("input");
-              }}
-              style={{
-                cursor: "pointer",
-                textDecoration: "underline",
-              }}
-            >
-              Change phone number
-            </p>
-          </form>
         )}
 
         {message && <p className={`message ${messageType}`}>{message}</p>}
