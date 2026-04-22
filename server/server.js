@@ -77,6 +77,7 @@ const sendOtpError = (res, error, fallbackMessage) => {
   console.error(fallbackMessage, {
     code: error.code,
     message: error.message,
+    moreInfo: error.moreInfo,
     status: error.status,
   });
 
@@ -84,6 +85,7 @@ const sendOtpError = (res, error, fallbackMessage) => {
     error: fallbackMessage,
     details: error.message,
     code: error.code,
+    moreInfo: error.moreInfo,
   });
 };
 
@@ -223,14 +225,15 @@ app.post("/verify-otp", async (req, res) => {
 app.post("/api/auth/send-phone-otp", async (req, res) => {
   try {
     const { phoneNumber } = req.body;
+    const normalizedPhoneNumber = normalizePhone(phoneNumber);
 
-    let user = await User.findOne({ phoneNumber });
+    await sendTwilioOtp(normalizedPhoneNumber);
+
+    let user = await User.findOne({ phoneNumber: normalizedPhoneNumber });
 
     if (!user) {
-      user = await User.create({ phoneNumber });
+      user = await User.create({ phoneNumber: normalizedPhoneNumber });
     }
-
-    await sendTwilioOtp(phoneNumber);
 
     res.json({ message: "OTP sent successfully" });
   } catch (error) {
@@ -242,17 +245,18 @@ app.post("/api/auth/send-phone-otp", async (req, res) => {
 app.post("/api/auth/verify-phone-otp", async (req, res) => {
   try {
     const { phoneNumber, otp } = req.body;
+    const normalizedPhoneNumber = normalizePhone(phoneNumber);
 
-    const verification_check = await verifyTwilioOtp(phoneNumber, otp);
+    const verification_check = await verifyTwilioOtp(normalizedPhoneNumber, otp);
 
     if (verification_check.status !== "approved") {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    let user = await User.findOne({ phoneNumber });
+    let user = await User.findOne({ phoneNumber: normalizedPhoneNumber });
 
     if (!user) {
-      user = await User.create({ phoneNumber });
+      user = await User.create({ phoneNumber: normalizedPhoneNumber });
     }
 
     const token = jwt.sign(
