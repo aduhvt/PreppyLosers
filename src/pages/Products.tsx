@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "./Products.css";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { API_URL } from "../config";
 
 interface Product {
   _id: string;

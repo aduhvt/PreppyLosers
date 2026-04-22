@@ -4,22 +4,30 @@ import "./Login.css";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
+import { API_URL } from "../config";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const stringifyMessage = (value: any, fallback: string): string => {
+  if (!value) return fallback;
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value.message) return stringifyMessage(value.message, fallback);
+
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return fallback;
+  }
+};
 
 const getErrorMessage = (error: any, fallback: string) => {
   const data = error?.response?.data;
-  const message =
+  return stringifyMessage(
     data?.details ||
-    data?.error ||
-    data?.message ||
-    error?.message ||
-    fallback;
-
-  if (typeof message === "string") return message;
-  if (message?.message) return String(message.message);
-
-  return fallback;
+      data?.error ||
+      data?.message ||
+      error?.message,
+    fallback,
+  );
 };
 
 const Login = () => {
@@ -252,7 +260,7 @@ const Login = () => {
                   onError={() => setMessage("Google Login failed")}
                   theme="filled_black"
                   shape="pill"
-                  width="100%"
+                  width="320"
                 />
                 <button
                   onClick={() =>

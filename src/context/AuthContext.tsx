@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL } from "../config";
 
 interface User {
   _id: string;
@@ -26,8 +27,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 export const AuthProvider = ({ children }: any) => {
   const [user, setUser] = useState<User | null>(null);

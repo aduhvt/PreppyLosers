@@ -2,8 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./ProductDetails.css";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { API_URL } from "../config";
 
 const ProductDetails = () => {
   const { id } = useParams();
