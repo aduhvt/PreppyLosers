@@ -93,8 +93,8 @@ const Login = () => {
       setIsSendingOtp(true);
       setMessage("");
 
-      await axios.post(`${API_URL}/send-otp`, {
-        phone: formattedPhoneNumber,
+      await axios.post(`${API_URL}/api/auth/send-phone-otp`, {
+        phoneNumber: formattedPhoneNumber,
       });
 
       setOtp("");
@@ -123,8 +123,8 @@ const Login = () => {
       setIsVerifyingOtp(true);
       setMessage("");
 
-      const res = await axios.post(`${API_URL}/verify-otp`, {
-        phone: formattedPhoneNumber,
+      const res = await axios.post(`${API_URL}/api/auth/verify-phone-otp`, {
+        phoneNumber: formattedPhoneNumber,
         otp,
       });
 
