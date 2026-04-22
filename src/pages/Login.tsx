@@ -124,7 +124,7 @@ const Login = () => {
                     opacity: 0.7,
                   }}
                 >
-                  Enter your phone number to receive a WhatsApp OTP.
+                  Enter your phone number to receive an SMS OTP.
                 </p>
                 <div
                   style={{
@@ -146,7 +146,7 @@ const Login = () => {
                     style={{ marginBottom: 0 }}
                   />
                 </div>
-                <button type="submit">Get WhatsApp OTP</button>
+                <button type="submit">Get SMS OTP</button>
               </form>
             )}
 
@@ -216,7 +216,7 @@ const Login = () => {
           <form onSubmit={verifyPhoneOtp} className="fade-in">
             <p style={{ fontSize: "14px", marginBottom: "20px", opacity: 0.7 }}>
               Enter the 6-digit OTP sent to <strong>+91 {phoneNumber}</strong>{" "}
-              via WhatsApp.
+              via SMS.
             </p>
             <input
               type="text"
