@@ -7,6 +7,21 @@ import { GoogleLogin } from "@react-oauth/google";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+const getErrorMessage = (error: any, fallback: string) => {
+  const data = error?.response?.data;
+  const message =
+    data?.details ||
+    data?.error ||
+    data?.message ||
+    error?.message ||
+    fallback;
+
+  if (typeof message === "string") return message;
+  if (message?.message) return String(message.message);
+
+  return fallback;
+};
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -53,7 +68,8 @@ const Login = () => {
       setStep("sent");
     } catch (error: any) {
       console.error("Frontend error:", error);
-      setMessage(error.response?.data?.error || "Failed to send login link");
+      setMessage(getErrorMessage(error, "Failed to send login link"));
+      setMessageType("error");
     }
   };
 
@@ -79,11 +95,7 @@ const Login = () => {
       setIsOtpVisible(true);
     } catch (error: any) {
       console.error("Phone OTP Error:", error);
-      setMessage(
-        error.response?.data?.details ||
-          error.response?.data?.error ||
-          "Failed to send OTP"
-      );
+      setMessage(getErrorMessage(error, "Failed to send OTP"));
       setMessageType("error");
     } finally {
       setIsSendingOtp(false);
@@ -112,12 +124,7 @@ const Login = () => {
       navigate("/");
     } catch (error: any) {
       setOtp("");
-      setMessage(
-        error.response?.data?.details ||
-          error.response?.data?.error ||
-          error.response?.data?.message ||
-          "The OTP you entered is wrong"
-      );
+      setMessage(getErrorMessage(error, "The OTP you entered is wrong"));
       setMessageType("error");
     } finally {
       setIsVerifyingOtp(false);
