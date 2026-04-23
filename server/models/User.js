@@ -26,6 +26,16 @@ const userSchema = new mongoose.Schema({
     default: "",
   },
 
+  emailToken: {
+    type: String,
+    default: null,
+  },
+
+  emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+
   addressBook: {
     fullName: String,
     address: String,

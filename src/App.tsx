@@ -13,6 +13,7 @@ import Orders from "./pages/Orders";
 import AdminOrders from "./pages/AdminOrders";
 import Profile from "./pages/Profile";
 import VerifyLink from "./pages/VerifyLink";
+import VerifyEmail from "./pages/VerifyEmail";
 import SplashScreen from "./components/SplashScreen/SplashScreen";
 
 
@@ -35,6 +36,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify" element={<VerifyLink />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<Cart />} />

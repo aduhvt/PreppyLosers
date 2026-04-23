@@ -4,8 +4,11 @@ const jwt = require("jsonwebtoken");
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const { Resend } = require("resend");
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const crypto = require("crypto");
 const { OAuth2Client } = require("google-auth-library");
+
 const Product = require("./models/Product");
 const User = require("./models/User");
 const Order = require("./models/Order");
@@ -147,9 +150,7 @@ mongoose
   })
   .catch((err) => console.log(err));
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// 🔥 SEND MAGIC LINK ROUTE
+// 🔥 SEND MAGIC LINK ROUTE (SENDGRID) (SENDGRID)
 app.post("/api/auth/send-otp", async (req, res) => {
   console.log("Send Magic Link route hit for email:", req.body.email);
 
@@ -168,54 +169,34 @@ app.post("/api/auth/send-otp", async (req, res) => {
       { expiresIn: "15m" },
     );
 
-   const magicLink = `https://preppylosers.com/verify?token=${magicToken}`;
+    const magicLink = `https://preppylosers.com/verify?token=${magicToken}`;
 
-    console.log("Attempting to send email via Resend...");
-    const emailRes = await resend.emails.send({
-      from: "Preppy Losers <auth@preppylosers.in>",
+    console.log("Attempting to send email via SendGrid...");
+    const msg = {
       to: email,
+      from: "no-reply@preppylosers.com", // Verified SendGrid sender
       subject: "Login to Preppy Losers",
       html: `
         <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; color: #000; background-color: #ffffff;">
           <h1 style="font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px;">PREPPY LOSERS</h1>
-          
-          <p style="font-size: 16px; line-height: 1.5; margin-bottom: 25px;">
-            Click the button below to log in to your account. For your security, this link will expire in 15 minutes.
-          </p>
-          
+          <p style="font-size: 16px; line-height: 1.5; margin-bottom: 25px;">Click the button below to log in to your account. For your security, this link will expire in 15 minutes.</p>
           <div style="text-align: center; margin: 40px 0;">
             <a href="${magicLink}" style="background-color: #000; color: #fff; padding: 15px 35px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; letter-spacing: 1px; display: inline-block; text-transform: uppercase;">LOG IN TO SHOP</a>
           </div>
-          
-          <p style="font-size: 14px; color: #666; margin-top: 30px; line-height: 1.5;">
-            If the button above doesn't work, copy and paste this link into your browser:<br>
-            <span style="color: #000; word-break: break-all;">${magicLink}</span>
-          </p>
-          
-          <hr style="border: none; border-top: 1px solid #eee; margin: 40px 0;">
-          
-          <p style="font-size: 12px; color: #999; text-align: center;">
-            You received this because a login was requested for your account. If you didn't request this, you can safely ignore this email.
-          </p>
+          <p style="font-size: 12px; color: #999; text-align: center;">You received this because a login was requested for your account. If you didn't request this, you can safely ignore this email.</p>
         </div>
       `,
-    });
+    };
 
-    console.log("Resend API response:", emailRes);
-
-    if (emailRes.error) {
-      console.error("Resend Error details:", emailRes.error);
-      return res.status(400).json({ error: emailRes.error.message });
-    }
-
-    res.json({ message: "Magic link sent successfully" });
+    await sgMail.send(msg);
+    res.json({ message: "Magic link sent successfully via SendGrid" });
   } catch (error) {
-    console.error("SEND MAGIC LINK ERROR:", error);
+    console.error("SENDGRID SEND-OTP ERROR:", error);
     res.status(500).json({ error: error.message || "Failed to send magic link" });
   }
 });
 
-// 🔥 SEND VERIFICATION EMAIL (FOR LOGGED-IN USERS)
+// 🔥 SEND VERIFICATION EMAIL (SENDGRID MANUAL TOKEN)
 app.post("/api/auth/send-verification-email", authenticate, async (req, res) => {
   try {
     const { email } = req.body;
@@ -225,44 +206,72 @@ app.post("/api/auth/send-verification-email", authenticate, async (req, res) => 
       return res.status(400).json({ error: "Email is required" });
     }
 
-    // Check if email is already in use
     const existingUser = await User.findOne({ email });
     if (existingUser && existingUser._id.toString() !== userId) {
       return res.status(400).json({ error: "Email already in use by another account" });
     }
 
-    const magicToken = jwt.sign(
-      { userId: userId, email: email, type: "email_verification" },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" },
-    );
+    // Generate token as requested
+    const token = crypto.randomBytes(32).toString("hex");
 
-    const magicLink = `https://preppylosers.com/verify?token=${magicToken}`;
+    // Store in DB
+    await User.findByIdAndUpdate(userId, { emailToken: token });
 
-    const emailRes = await resend.emails.send({
-      from: "Preppy Losers <auth@preppylosers.in>",
+    const link = `https://preppylosers.com/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+
+    const msg = {
       to: email,
-      subject: "Verify your email - Preppy Losers",
+      from: "no-reply@preppylosers.com", // Verified SendGrid sender
+      subject: "Verify your email",
       html: `
-        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; color: #000; background-color: #ffffff;">
-          <h1 style="font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px;">PREPPY LOSERS</h1>
-          <p style="font-size: 16px; line-height: 1.5; margin-bottom: 25px;">Click the button below to verify your email address and link it to your account.</p>
-          <div style="text-align: center; margin: 40px 0;">
-            <a href="${magicLink}" style="background-color: #000; color: #fff; padding: 15px 35px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; letter-spacing: 1px; display: inline-block; text-transform: uppercase;">VERIFY EMAIL</a>
-          </div>
-          <p style="font-size: 12px; color: #999; text-align: center;">If you didn't request this, you can safely ignore this email.</p>
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h3>Verify your email</h3>
+          <p>Click below to verify your email address:</p>
+          <a href="${link}" style="display: inline-block; background: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Verify Email</a>
         </div>
       `,
-    });
+    };
 
-    if (emailRes.error) {
-      return res.status(400).json({ error: emailRes.error.message });
+    await sgMail.send(msg);
+    res.json({ success: true, message: "Verification email sent successfully" });
+  } catch (error) {
+    console.error("SENDGRID VERIFICATION ERROR:", error);
+    res.status(500).json({ error: "Failed to send verification email" });
+  }
+});
+
+// 🔥 VERIFY EMAIL TOKEN
+app.get("/api/auth/verify-email", async (req, res) => {
+  try {
+    const { token, email } = req.query;
+
+    if (!token || !email) {
+      return res.status(400).json({ message: "Token or email is missing" });
     }
 
-    res.json({ message: "Verification email sent successfully" });
+    const user = await User.findOne({ email, emailToken: token });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired verification link" });
+    }
+
+    // Mark as verified and clear token
+    user.emailVerified = true;
+    user.emailToken = null;
+    user.email = email; // Update the email as well
+    await user.save();
+
+    // Return a token so they stay logged in
+    const authToken = jwt.sign(
+      { userId: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    res.json({ message: "Email verified successfully", token: authToken });
   } catch (error) {
-    console.error("VERIFICATION EMAIL ERROR:", error);
-    res.status(500).json({ error: "Failed to send verification email" });
+    console.error("VERIFY EMAIL ERROR:", error);
+    res.status(500).json({ message: "Verification failed" });
   }
 });
 
