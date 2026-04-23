@@ -5,6 +5,7 @@ import { API_URL } from "../config";
 interface User {
   _id: string;
   email?: string;
+  emailVerified?: boolean;
   phoneNumber?: string;
   createdAt?: string;
   name?: string;

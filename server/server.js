@@ -92,6 +92,24 @@ const sendOtpError = (res, error, fallbackMessage) => {
   });
 };
 
+const authenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+};
+
 const adminOnly = (req, res, next) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({ message: "Access denied" });
@@ -150,7 +168,7 @@ mongoose
   })
   .catch((err) => console.log(err));
 
-// 🔥 SEND MAGIC LINK ROUTE (SENDGRID) (SENDGRID)
+// 🔥 SEND MAGIC LINK ROUTE (SENDGRID)
 app.post("/api/auth/send-otp", async (req, res) => {
   console.log("Send Magic Link route hit for email:", req.body.email);
 
@@ -198,6 +216,7 @@ app.post("/api/auth/send-otp", async (req, res) => {
 
 // 🔥 SEND VERIFICATION EMAIL (SENDGRID MANUAL TOKEN)
 app.post("/api/auth/send-verification-email", authenticate, async (req, res) => {
+  console.log("Send verification email request for:", req.body.email, "from user:", req.user.userId);
   try {
     const { email } = req.body;
     const userId = req.user.userId;
@@ -219,6 +238,7 @@ app.post("/api/auth/send-verification-email", authenticate, async (req, res) => 
 
     const link = `https://preppylosers.com/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
 
+    console.log("Sending verification link via SendGrid...");
     const msg = {
       to: email,
       from: "no-reply@preppylosers.com", // Verified SendGrid sender
@@ -233,6 +253,7 @@ app.post("/api/auth/send-verification-email", authenticate, async (req, res) => 
     };
 
     await sgMail.send(msg);
+    console.log("Verification email sent successfully");
     res.json({ success: true, message: "Verification email sent successfully" });
   } catch (error) {
     console.error("SENDGRID VERIFICATION ERROR:", error);

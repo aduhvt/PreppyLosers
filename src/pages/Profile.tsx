@@ -51,7 +51,7 @@ const Profile = () => {
     setIsPhoneVerified(!!user?.phoneNumber);
     
     setEmail(user?.email || "");
-    setIsEmailVerified(!!user?.email);
+    setIsEmailVerified(!!user?.emailVerified);
 
     setAddressBook({
       ...emptyAddressBook,
@@ -222,12 +222,12 @@ const Profile = () => {
                   if (e.target.value !== user?.email) {
                     setIsEmailVerified(false);
                   } else {
-                    setIsEmailVerified(true);
+                    setIsEmailVerified(!!user?.emailVerified);
                   }
                 }}
                 placeholder="Enter your email" 
               />
-              {email && isEmailChanged && !isEmailVerified && !emailVerificationSent && (
+              {email && !isEmailVerified && !emailVerificationSent && (
                 <span 
                   onClick={handleSendEmailVerification}
                   style={{ color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px', marginTop: '4px' }}
@@ -235,7 +235,7 @@ const Profile = () => {
                   Verify email
                 </span>
               )}
-              {emailVerificationSent && isEmailChanged && !isEmailVerified && (
+              {emailVerificationSent && !isEmailVerified && (
                 <span style={{ color: '#000', fontSize: '11px', marginTop: '4px', fontStyle: 'italic' }}>
                   Check your inbox for the link
                 </span>
