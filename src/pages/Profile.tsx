@@ -84,7 +84,9 @@ const Profile = () => {
       setStatus("Verification link sent to your email");
       setStatusType("success");
     } catch (error: any) {
-      setStatus(error.response?.data?.error || "Failed to send verification email");
+      const errorMsg = error.response?.data?.error || "Failed to send verification email";
+      const details = error.response?.data?.details ? ` (${error.response.data.details})` : "";
+      setStatus(`${errorMsg}${details}`);
       setStatusType("error");
     } finally {
       setIsVerifying(false);
@@ -233,7 +235,12 @@ const Profile = () => {
                 }}
                 placeholder="Enter your email" 
               />
-              {showEmailVerifyLink && (
+              {isEmailVerified && email === user?.email && (
+                <span style={{ color: '#16803a', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>
+                  ✓ Email verified
+                </span>
+              )}
+              {email && !isEmailVerified && !emailVerificationSent && (
                 <span 
                   onClick={handleSendEmailVerification}
                   style={{ color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px', marginTop: '4px' }}
