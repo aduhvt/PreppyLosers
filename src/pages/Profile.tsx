@@ -285,23 +285,47 @@ const Profile = () => {
                 </span>
               )}
               {emailVerificationSent && !isEmailVerified && (
-                <div style={{ marginTop: '10px' }}>
-                  <p style={{ fontSize: '11px', marginBottom: '5px', fontStyle: 'italic', color: '#000' }}>Enter the 6-digit code sent to your email:</p>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ marginTop: '10px', background: 'rgba(0,0,0,0.05)', padding: '10px', borderRadius: '8px' }}>
+                  <p style={{ fontSize: '11px', marginBottom: '8px', fontStyle: 'italic', color: '#000', fontWeight: '600' }}>
+                    Enter the 6-digit code sent to your email:
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                     <input 
                       value={emailCode} 
                       onChange={(e) => setEmailCode(e.target.value)}
                       placeholder="6-digit code"
-                      style={{ height: '36px', fontSize: '13px' }}
+                      maxLength={6}
+                      style={{ height: '38px', fontSize: '14px', textAlign: 'center', letterSpacing: '2px' }}
                     />
                     <button 
                       type="button" 
                       onClick={handleVerifyEmailCode}
-                      style={{ minWidth: '80px', height: '36px', background: '#000', color: '#fff', borderRadius: '6px', fontSize: '12px' }}
+                      disabled={isVerifying || emailCode.length !== 6}
+                      style={{ 
+                        minWidth: '80px', 
+                        height: '38px', 
+                        background: '#000', 
+                        color: '#fff', 
+                        borderRadius: '6px', 
+                        fontSize: '12px',
+                        cursor: emailCode.length === 6 ? 'pointer' : 'not-allowed',
+                        opacity: emailCode.length === 6 ? 1 : 0.6
+                      }}
                     >
                       {isVerifying ? "..." : "Verify"}
                     </button>
                   </div>
+                  <span 
+                    onClick={handleSendEmailVerification}
+                    style={{ 
+                      fontSize: '11px', 
+                      textDecoration: 'underline', 
+                      cursor: isVerifying ? 'not-allowed' : 'pointer', 
+                      color: '#555' 
+                    }}
+                  >
+                    {isVerifying ? "Sending..." : "Resend code"}
+                  </span>
                 </div>
               )}
             </label>
