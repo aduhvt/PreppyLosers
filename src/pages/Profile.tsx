@@ -67,6 +67,7 @@ const Profile = () => {
   };
 
   const handleSendEmailVerification = async () => {
+    setStatus("");
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setStatus("Enter a valid email address");
       setStatusType("error");
@@ -227,12 +228,17 @@ const Profile = () => {
                 }}
                 placeholder="Enter your email" 
               />
-              {email && !isEmailVerified && !emailVerificationSent && (
+              {showEmailVerifyLink && (
                 <span 
                   onClick={handleSendEmailVerification}
                   style={{ color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px', marginTop: '4px' }}
                 >
-                  Verify email
+                  {isVerifying ? "Sending..." : "Verify email"}
+                </span>
+              )}
+              {status && statusType === "error" && !isEmailVerified && !emailVerificationSent && (
+                <span style={{ color: '#c62828', fontSize: '11px', marginTop: '4px', fontWeight: 'bold' }}>
+                  {status}
                 </span>
               )}
               {emailVerificationSent && !isEmailVerified && (
