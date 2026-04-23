@@ -4,7 +4,9 @@ import { API_URL } from "../config";
 
 interface User {
   _id: string;
-  email: string;
+  email?: string;
+  phoneNumber?: string;
+  createdAt?: string;
   name?: string;
   role?: string;
   addressBook?: {
@@ -15,7 +17,6 @@ interface User {
     phone: string;
     country: string;
     apartment: string;
-    phoneNumber?: string;
   };
 }
 

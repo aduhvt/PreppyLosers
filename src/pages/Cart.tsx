@@ -20,6 +20,24 @@ const Cart = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [logoVisible, setLogoVisible] = useState(true);
 
+  const getAvatarLabel = () => {
+    if (!user) return "?";
+
+    if (user.name && user.name.trim() !== "") {
+      return user.name.charAt(0).toUpperCase();
+    }
+
+    if (user.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+
+    if (user.phoneNumber) {
+      return user.phoneNumber.replace(/\D/g, "").slice(-2);
+    }
+
+    return "?";
+  };
+
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
     setCart(storedCart);
@@ -60,7 +78,7 @@ const Cart = () => {
         <div className="cart-header-right">
           {user ? (
             <div className="avatar-wrapper" onClick={() => setDropdownOpen(!dropdownOpen)}>
-              <div className="avatar-circle">{user.name?.charAt(0).toUpperCase()}</div>
+              <div className="avatar-circle">{getAvatarLabel()}</div>
               {dropdownOpen && (
                 <div className="dropdown">
                   <Link to="/profile">Profile</Link>

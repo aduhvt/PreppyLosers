@@ -12,6 +12,30 @@ const Navbar = () => {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [logoVisible, setLogoVisible] = useState(false);
 
+  const getAvatarLabel = () => {
+    if (!user) return "?";
+
+    if (user.name && user.name.trim() !== "") {
+      return user.name
+        .split(" ")
+        .map((namePart: string) => namePart[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    }
+
+    if (user.email) {
+      return user.email.substring(0, 1).toUpperCase();
+    }
+
+    if (user.phoneNumber) {
+      const phoneDigits = user.phoneNumber.replace(/\D/g, "");
+      return phoneDigits.slice(-2);
+    }
+
+    return "?";
+  };
+
   useEffect(() => {
     const hasSeenSplashBefore = sessionStorage.getItem("hasSeenSplashBefore");
     if (!hasSeenSplashBefore) {
@@ -72,19 +96,7 @@ const Navbar = () => {
             className="avatar-wrapper"
             onClick={() => setDropdownOpen(!dropdownOpen)}
           >
-            <div className="avatar-circle">
-              {user.name && user.name.trim() !== ""
-                ? user.name
-                    .split(" ")
-                    .map((n: string) => n[0])
-                    .join("")
-                    .toUpperCase()
-                : user.email
-                ? user.email.substring(0, 1).toUpperCase()
-                : (user as any).phoneNumber
-                ? (user as any).phoneNumber[0].toUpperCase()
-                : "?"}
-            </div>
+            <div className="avatar-circle">{getAvatarLabel()}</div>
 
             {dropdownOpen && (
               <div className="dropdown">

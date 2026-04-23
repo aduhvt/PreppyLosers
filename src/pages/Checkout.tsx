@@ -49,7 +49,7 @@ const Checkout = () => {
       const nameParts = user.addressBook?.fullName?.split(" ") || ["", ""];
       setDeliveryAddress((prev) => ({
         ...prev,
-        email: user.email,
+        email: user.email || "",
         firstName: nameParts[0] || user.name || "",
         lastName: nameParts.slice(1).join(" ") || "",
         address: user.addressBook?.address || "",
