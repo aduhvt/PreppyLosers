@@ -310,41 +310,6 @@ app.post("/api/auth/verify-email-code", authenticate, async (req, res) => {
   }
 });
 
-// 🔥 VERIFY EMAIL TOKEN
-app.get("/api/auth/verify-email", async (req, res) => {
-  try {
-    const { token, email } = req.query;
-
-    if (!token || !email) {
-      return res.status(400).json({ message: "Token or email is missing" });
-    }
-
-    const user = await User.findOne({ email, emailToken: token });
-
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired verification link" });
-    }
-
-    // Mark as verified and clear token
-    user.emailVerified = true;
-    user.emailToken = null;
-    user.email = email; // Update the email as well
-    await user.save();
-
-    // Return a token so they stay logged in
-    const authToken = jwt.sign(
-      { userId: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" },
-    );
-
-    res.json({ message: "Email verified successfully", token: authToken });
-  } catch (error) {
-    console.error("VERIFY EMAIL ERROR:", error);
-    res.status(500).json({ message: "Verification failed" });
-  }
-});
-
 app.post("/send-otp", async (req, res) => {
   const { phone } = req.body;
 
