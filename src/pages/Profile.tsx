@@ -81,6 +81,7 @@ const Profile = () => {
         { email },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      alert("Success! Check your email for the code.");
       setEmailVerificationSent(true);
       setStatus("Verification code sent to your email");
       setStatusType("success");
@@ -414,28 +415,6 @@ const Profile = () => {
               )}
             </div>
           </div>
-
-          {otpSent && (
-            <div className="profile-field-row" style={{ marginTop: '10px' }}>
-              <label>
-                Enter SMS OTP
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input 
-                    value={otp} 
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="6-digit code"
-                  />
-                  <button 
-                    type="button" 
-                    onClick={handleVerifyOtp}
-                    style={{ minWidth: '80px', height: '42px', background: '#000', color: '#fff', borderRadius: '6px' }}
-                  >
-                    Verify
-                  </button>
-                </div>
-              </label>
-            </div>
-          )}
           </section>
 
           <section className="profile-panel">
