@@ -30,22 +30,29 @@ const Profile = () => {
   const { user, refreshUser } = useAuth();
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [addressBook, setAddressBook] = useState<AddressBook>(emptyAddressBook);
   const [status, setStatus] = useState("");
   const [statusType, setStatusType] = useState<"success" | "error">("success");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Phone verification state
+  // Verification state
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
 
   useEffect(() => {
     setName(user?.name || "");
     const userPhone = user?.phoneNumber || "";
     setPhoneNumber(userPhone.replace("+91", ""));
     setIsPhoneVerified(!!user?.phoneNumber);
+    
+    setEmail(user?.email || "");
+    setIsEmailVerified(!!user?.email);
+
     setAddressBook({
       ...emptyAddressBook,
       ...(user?.addressBook || {}),
@@ -57,6 +64,30 @@ const Profile = () => {
       ...current,
       [field]: value,
     }));
+  };
+
+  const handleSendEmailVerification = async () => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setStatus("Enter a valid email address");
+      setStatusType("error");
+      return;
+    }
+    try {
+      setIsVerifying(true);
+      const token = localStorage.getItem("token");
+      await axios.post(`${API_URL}/api/auth/send-verification-email`, 
+        { email },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setEmailVerificationSent(true);
+      setStatus("Verification link sent to your email");
+      setStatusType("success");
+    } catch (error: any) {
+      setStatus(error.response?.data?.error || "Failed to send verification email");
+      setStatusType("error");
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleSendOtp = async () => {
@@ -109,6 +140,12 @@ const Profile = () => {
       return;
     }
 
+    if (email && !isEmailVerified && email !== user?.email) {
+      setStatus("Please verify your email address first");
+      setStatusType("error");
+      return;
+    }
+
     try {
       setIsSaving(true);
       setStatus("");
@@ -118,6 +155,7 @@ const Profile = () => {
         `${API_URL}/api/users/profile`,
         {
           name: name.trim(),
+          email: email ? email.trim() : null,
           phoneNumber: phoneNumber ? `+91${phoneNumber}` : null,
           addressBook: {
             ...addressBook,
@@ -148,6 +186,7 @@ const Profile = () => {
   };
 
   const isPhoneChanged = phoneNumber !== user?.phoneNumber?.replace("+91", "");
+  const isEmailChanged = email !== user?.email;
 
   return (
     <div className="profile-page" style={{ backgroundImage: `url(${profileBg})` }}>
@@ -176,7 +215,31 @@ const Profile = () => {
           <div className="profile-field-row">
             <label>
               Email
-              <input value={user?.email || "Not added"} disabled style={{ cursor: 'not-allowed' }} />
+              <input 
+                value={email} 
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (e.target.value !== user?.email) {
+                    setIsEmailVerified(false);
+                  } else {
+                    setIsEmailVerified(true);
+                  }
+                }}
+                placeholder="Enter your email" 
+              />
+              {email && isEmailChanged && !isEmailVerified && !emailVerificationSent && (
+                <span 
+                  onClick={handleSendEmailVerification}
+                  style={{ color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px', marginTop: '4px' }}
+                >
+                  Verify email
+                </span>
+              )}
+              {emailVerificationSent && isEmailChanged && !isEmailVerified && (
+                <span style={{ color: '#000', fontSize: '11px', marginTop: '4px', fontStyle: 'italic' }}>
+                  Check your inbox for the link
+                </span>
+              )}
             </label>
             <label>
               Phone number

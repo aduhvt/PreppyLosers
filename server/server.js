@@ -215,6 +215,57 @@ app.post("/api/auth/send-otp", async (req, res) => {
   }
 });
 
+// 🔥 SEND VERIFICATION EMAIL (FOR LOGGED-IN USERS)
+app.post("/api/auth/send-verification-email", authenticate, async (req, res) => {
+  try {
+    const { email } = req.body;
+    const userId = req.user.userId;
+
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    // Check if email is already in use
+    const existingUser = await User.findOne({ email });
+    if (existingUser && existingUser._id.toString() !== userId) {
+      return res.status(400).json({ error: "Email already in use by another account" });
+    }
+
+    const magicToken = jwt.sign(
+      { userId: userId, email: email, type: "email_verification" },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" },
+    );
+
+    const magicLink = `https://preppylosers.com/verify?token=${magicToken}`;
+
+    const emailRes = await resend.emails.send({
+      from: "Preppy Losers <auth@preppylosers.in>",
+      to: email,
+      subject: "Verify your email - Preppy Losers",
+      html: `
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; color: #000; background-color: #ffffff;">
+          <h1 style="font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px;">PREPPY LOSERS</h1>
+          <p style="font-size: 16px; line-height: 1.5; margin-bottom: 25px;">Click the button below to verify your email address and link it to your account.</p>
+          <div style="text-align: center; margin: 40px 0;">
+            <a href="${magicLink}" style="background-color: #000; color: #fff; padding: 15px 35px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; letter-spacing: 1px; display: inline-block; text-transform: uppercase;">VERIFY EMAIL</a>
+          </div>
+          <p style="font-size: 12px; color: #999; text-align: center;">If you didn't request this, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
+
+    if (emailRes.error) {
+      return res.status(400).json({ error: emailRes.error.message });
+    }
+
+    res.json({ message: "Verification email sent successfully" });
+  } catch (error) {
+    console.error("VERIFICATION EMAIL ERROR:", error);
+    res.status(500).json({ error: "Failed to send verification email" });
+  }
+});
+
 app.post("/send-otp", async (req, res) => {
   const { phone } = req.body;
 
@@ -355,31 +406,36 @@ app.get("/api/auth/verify-link", async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (decoded.type !== "magic_link") {
-      return res.status(400).json({ message: "Invalid token type" });
+    // 1. Handle Login Magic Link
+    if (decoded.type === "magic_link") {
+      const user = await User.findOne({ email: decoded.email });
+      if (!user) return res.status(400).json({ message: "User not found" });
+
+      const authToken = jwt.sign(
+        { userId: user._id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" },
+      );
+      return res.json({ message: "Login successful", token: authToken });
     }
 
-    const user = await User.findOne({ email: decoded.email });
+    // 2. Handle Email Verification (for existing users)
+    if (decoded.type === "email_verification") {
+      const user = await User.findById(decoded.userId);
+      if (!user) return res.status(400).json({ message: "User not found" });
 
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      user.email = decoded.email;
+      await user.save();
+
+      const authToken = jwt.sign(
+        { userId: user._id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" },
+      );
+      return res.json({ message: "Email verified successfully", token: authToken });
     }
 
-    // 🔐 Generate Long-term JWT (7 days)
-    const authToken = jwt.sign(
-      {
-        userId: user._id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" },
-    );
-
-    res.json({
-      message: "Login successful",
-      token: authToken,
-    });
+    return res.status(400).json({ message: "Invalid token type" });
   } catch (error) {
     console.error("VERIFY LINK ERROR:", error);
     res.status(401).json({ message: "Link expired or invalid" });
