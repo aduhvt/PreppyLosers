@@ -193,8 +193,6 @@ const Profile = () => {
                     }
                   }}
                   placeholder="10 digit number"
-                  disabled={user?.phoneNumber && !isPhoneChanged}
-                  style={user?.phoneNumber && !isPhoneChanged ? { cursor: 'not-allowed' } : {}}
                 />
               </div>
               {phoneNumber && isPhoneChanged && !isPhoneVerified && !otpSent && (
