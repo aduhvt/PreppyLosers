@@ -27,7 +27,7 @@ const emptyAddressBook: AddressBook = {
 };
 
 const Profile = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, login } = useAuth();
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -37,8 +37,6 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   // Verification state
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState("");
   const [emailCode, setEmailCode] = useState("");
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -46,18 +44,20 @@ const Profile = () => {
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
 
   useEffect(() => {
-    setName(user?.name || "");
-    const userPhone = user?.phoneNumber || "";
-    setPhoneNumber(userPhone.replace("+91", ""));
-    setIsPhoneVerified(!!user?.phoneNumber);
-    
-    setEmail(user?.email || "");
-    setIsEmailVerified(!!user?.emailVerified);
+    if (user) {
+      setName(user.name || "");
+      const userPhone = user.phoneNumber || "";
+      setPhoneNumber(userPhone.replace("+91", ""));
+      setIsPhoneVerified(!!user.phoneNumber);
+      
+      setEmail(user.email || "");
+      setIsEmailVerified(!!user.emailVerified);
 
-    setAddressBook({
-      ...emptyAddressBook,
-      ...(user?.addressBook || {}),
-    });
+      setAddressBook({
+        ...emptyAddressBook,
+        ...(user.addressBook || {}),
+      });
+    }
   }, [user]);
 
   const updateAddressBook = (field: keyof AddressBook, value: string) => {
@@ -81,14 +81,14 @@ const Profile = () => {
         { email },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Success! Check your email for the code.");
+      
+      alert("Verification code sent! Please check your inbox.");
       setEmailVerificationSent(true);
       setStatus("Verification code sent to your email");
       setStatusType("success");
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || "Failed to send verification code";
-      const details = error.response?.data?.details ? ` (${error.response.data.details})` : "";
-      setStatus(`${errorMsg}${details}`);
+      setStatus(errorMsg);
       setStatusType("error");
     } finally {
       setIsVerifying(false);
@@ -109,9 +109,7 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Update local storage and state with new token
       await login(res.data.token);
-      
       setIsEmailVerified(true);
       setEmailVerificationSent(false);
       setEmailCode("");
@@ -125,55 +123,8 @@ const Profile = () => {
     }
   };
 
-  const handleSendOtp = async () => {
-    if (phoneNumber.length !== 10) {
-      setStatus("Enter a valid 10-digit number");
-      setStatusType("error");
-      return;
-    }
-    try {
-      setIsVerifying(true);
-      await axios.post(`${API_URL}/api/auth/send-phone-otp`, {
-        phoneNumber: `+91${phoneNumber}`,
-      });
-      setOtpSent(true);
-      setStatus("Verification code sent via SMS");
-      setStatusType("success");
-    } catch (error: any) {
-      setStatus(error.response?.data?.error || "Failed to send SMS");
-      setStatusType("error");
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    try {
-      setIsVerifying(true);
-      await axios.post(`${API_URL}/api/auth/verify-phone-otp`, {
-        phoneNumber: `+91${phoneNumber}`,
-        otp,
-      });
-      setIsPhoneVerified(true);
-      setOtpSent(false);
-      setStatus("Phone number verified");
-      setStatusType("success");
-    } catch (error: any) {
-      setStatus(error.response?.data?.message || "Invalid OTP");
-      setStatusType("error");
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
   const updateProfile = async (event: React.FormEvent) => {
     event.preventDefault();
-
-    if (phoneNumber && !isPhoneVerified && phoneNumber !== user?.phoneNumber?.replace("+91", "")) {
-      setStatus("Please verify your phone number first");
-      setStatusType("error");
-      return;
-    }
 
     if (email && !isEmailVerified && email !== user?.email) {
       setStatus("Please verify your email address first");
@@ -194,13 +145,6 @@ const Profile = () => {
           phoneNumber: phoneNumber ? `+91${phoneNumber}` : null,
           addressBook: {
             ...addressBook,
-            fullName: addressBook.fullName.trim(),
-            address: addressBook.address.trim(),
-            apartment: addressBook.apartment.trim(),
-            city: addressBook.city.trim(),
-            pincode: addressBook.pincode.trim(),
-            phone: addressBook.phone.trim(),
-            country: addressBook.country.trim() || "India",
           },
         },
         {
@@ -221,7 +165,6 @@ const Profile = () => {
   };
 
   const isPhoneChanged = phoneNumber !== user?.phoneNumber?.replace("+91", "");
-  const isEmailChanged = email !== user?.email;
 
   return (
     <div className="profile-page" style={{ backgroundImage: `url(${profileBg})` }}>
@@ -235,7 +178,7 @@ const Profile = () => {
         <form className="profile-form" onSubmit={updateProfile}>
           <section className="profile-panel">
           {status && (
-            <div className={`profile-message ${statusType}`} style={{ marginBottom: '15px', textAlign: 'center', width: '100%' }}>
+            <div className={`profile-message ${statusType}`} style={{ marginBottom: '15px', textAlign: 'center', width: '100%', fontWeight: 'bold' }}>
               {status}
             </div>
           )}
@@ -253,18 +196,12 @@ const Profile = () => {
           </label>
 
           <div className="profile-field-row">
+            {/* EMAIL COLUMN */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
               <label style={{ fontWeight: '700', fontSize: '13px' }}>Email</label>
               <input 
                 value={email} 
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (e.target.value !== user?.email) {
-                    setIsEmailVerified(false);
-                  } else {
-                    setIsEmailVerified(!!user?.emailVerified);
-                  }
-                }}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email" 
               />
               
@@ -282,138 +219,84 @@ const Profile = () => {
                   {isVerifying ? "Sending..." : "Verify email"}
                 </span>
               )}
-
-              {status && statusType === "error" && !isEmailVerified && !emailVerificationSent && (
-                <span style={{ color: '#c62828', fontSize: '11px', marginTop: '2px', fontWeight: 'bold' }}>
-                  {status}
-                </span>
-              )}
-
-              {emailVerificationSent && (
-                <div style={{ 
-                  marginTop: '12px', 
-                  background: 'rgba(255,255,255,0.9)', 
-                  padding: '16px', 
-                  borderRadius: '12px', 
-                  border: '2px solid #000',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                  animation: 'fadeIn 0.3s ease-in-out'
-                }}>
-                  <p style={{ fontSize: '13px', marginBottom: '10px', fontStyle: 'italic', color: '#000', fontWeight: '700' }}>
-                    Enter the 6-digit code sent to your email:
-                  </p>
-                  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                    <input 
-                      value={emailCode} 
-                      onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ''))}
-                      placeholder="000000"
-                      maxLength={6}
-                      style={{ 
-                        height: '42px', 
-                        fontSize: '18px', 
-                        textAlign: 'center', 
-                        letterSpacing: '4px', 
-                        background: '#f0f0f0',
-                        border: '1px solid #ccc',
-                        fontWeight: 'bold',
-                        color: '#000'
-                      }}
-                    />
-                    <button 
-                      type="button" 
-                      onClick={handleVerifyEmailCode}
-                      disabled={isVerifying || emailCode.length !== 6}
-                      style={{ 
-                        minWidth: '90px', 
-                        height: '42px', 
-                        background: '#000', 
-                        color: '#fff', 
-                        borderRadius: '8px', 
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        cursor: emailCode.length === 6 ? 'pointer' : 'not-allowed',
-                        opacity: emailCode.length === 6 ? 1 : 0.6
-                      }}
-                    >
-                      {isVerifying ? "..." : "Verify"}
-                    </button>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span 
-                      onClick={handleSendEmailVerification}
-                      style={{ 
-                        fontSize: '12px', 
-                        textDecoration: 'underline', 
-                        cursor: isVerifying ? 'not-allowed' : 'pointer', 
-                        color: '#000',
-                        fontWeight: '500'
-                      }}
-                    >
-                      {isVerifying ? "Sending..." : "Resend code"}
-                    </span>
-                    <span 
-                      onClick={() => setEmailVerificationSent(false)}
-                      style={{ 
-                        fontSize: '12px', 
-                        cursor: 'pointer', 
-                        color: '#666'
-                      }}
-                    >
-                      Cancel
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
 
+            {/* PHONE COLUMN */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
               <label style={{ fontWeight: '700', fontSize: '13px' }}>Phone number</label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>+91</span>
                 <input 
                   value={phoneNumber} 
-                  onChange={(e) => {
-                    setPhoneNumber(e.target.value);
-                    if (e.target.value !== user?.phoneNumber?.replace("+91", "")) {
-                      setIsPhoneVerified(false);
-                    } else {
-                      setIsPhoneVerified(true);
-                    }
-                  }}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="10 digit number"
                 />
               </div>
-              
-              {phoneNumber && isPhoneChanged && !isPhoneVerified && !otpSent && (
-                <span 
-                  onClick={handleSendOtp}
-                  style={{ color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px', marginTop: '2px' }}
-                >
-                  Verify phone number
-                </span>
-              )}
-
-              {otpSent && !isPhoneVerified && (
-                <div style={{ marginTop: '8px', background: 'rgba(255,255,255,0.4)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}>
-                  <label style={{ fontSize: '11px', marginBottom: '8px', fontStyle: 'italic', fontWeight: '600' }}>Enter SMS OTP</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input 
-                      value={otp} 
-                      onChange={(e) => setOtp(e.target.value)}
-                      placeholder="6-digit code"
-                      style={{ height: '38px', background: 'white' }}
-                    />
-                    <button 
-                      type="button" 
-                      onClick={handleVerifyOtp}
-                      style={{ minWidth: '80px', height: '38px', background: '#000', color: '#fff', borderRadius: '6px', fontSize: '12px' }}
-                    >
-                      Verify
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
+          </div>
+
+          {/* VERIFICATION BOX - FULL WIDTH */}
+          {emailVerificationSent && (
+            <div style={{ 
+              marginTop: '15px', 
+              background: '#fff', 
+              padding: '20px', 
+              borderRadius: '12px', 
+              border: '3px solid #000',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+              zIndex: 999
+            }}>
+              <p style={{ fontSize: '14px', marginBottom: '10px', color: '#000', fontWeight: 'bold' }}>
+                ENTER VERIFICATION CODE
+              </p>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                <input 
+                  value={emailCode} 
+                  onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="000000"
+                  maxLength={6}
+                  style={{ 
+                    height: '45px', 
+                    fontSize: '20px', 
+                    textAlign: 'center', 
+                    letterSpacing: '5px', 
+                    background: '#f0f0f0',
+                    border: '1px solid #000',
+                    color: '#000',
+                    flex: 1
+                  }}
+                />
+                <button 
+                  type="button" 
+                  onClick={handleVerifyEmailCode}
+                  disabled={isVerifying || emailCode.length !== 6}
+                  style={{ 
+                    minWidth: '100px', 
+                    height: '45px', 
+                    background: '#000', 
+                    color: '#fff', 
+                    borderRadius: '8px', 
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {isVerifying ? "..." : "VERIFY"}
+                </button>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span onClick={handleSendEmailVerification} style={{ fontSize: '12px', textDecoration: 'underline', cursor: 'pointer' }}>
+                  Resend Code
+                </span>
+                <span onClick={() => setEmailVerificationSent(false)} style={{ fontSize: '12px', textDecoration: 'underline', cursor: 'pointer', color: '#666' }}>
+                  Cancel
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div className="profile-actions">
+            <button type="submit" disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save Profile"}
+            </button>
           </div>
           </section>
 
