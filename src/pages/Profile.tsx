@@ -252,8 +252,8 @@ const Profile = () => {
           </label>
 
           <div className="profile-field-row">
-            <label>
-              Email
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+              <label style={{ fontWeight: '700', fontSize: '13px' }}>Email</label>
               <input 
                 value={email} 
                 onChange={(e) => {
@@ -266,26 +266,30 @@ const Profile = () => {
                 }}
                 placeholder="Enter your email" 
               />
+              
               {isEmailVerified && email === user?.email && (
-                <span style={{ color: '#16803a', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>
+                <span style={{ color: '#16803a', fontSize: '12px', marginTop: '2px', fontWeight: 'bold' }}>
                   ✓ Email verified
                 </span>
               )}
+
               {email && !isEmailVerified && !emailVerificationSent && (
                 <span 
                   onClick={handleSendEmailVerification}
-                  style={{ color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px', marginTop: '4px' }}
+                  style={{ color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px', marginTop: '2px' }}
                 >
                   {isVerifying ? "Sending..." : "Verify email"}
                 </span>
               )}
+
               {status && statusType === "error" && !isEmailVerified && !emailVerificationSent && (
-                <span style={{ color: '#c62828', fontSize: '11px', marginTop: '4px', fontWeight: 'bold' }}>
+                <span style={{ color: '#c62828', fontSize: '11px', marginTop: '2px', fontWeight: 'bold' }}>
                   {status}
                 </span>
               )}
+
               {emailVerificationSent && !isEmailVerified && (
-                <div style={{ marginTop: '10px', background: 'rgba(0,0,0,0.05)', padding: '10px', borderRadius: '8px' }}>
+                <div style={{ marginTop: '8px', background: 'rgba(255,255,255,0.4)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}>
                   <p style={{ fontSize: '11px', marginBottom: '8px', fontStyle: 'italic', color: '#000', fontWeight: '600' }}>
                     Enter the 6-digit code sent to your email:
                   </p>
@@ -295,7 +299,7 @@ const Profile = () => {
                       onChange={(e) => setEmailCode(e.target.value)}
                       placeholder="6-digit code"
                       maxLength={6}
-                      style={{ height: '38px', fontSize: '14px', textAlign: 'center', letterSpacing: '2px' }}
+                      style={{ height: '38px', fontSize: '14px', textAlign: 'center', letterSpacing: '2px', background: 'white' }}
                     />
                     <button 
                       type="button" 
@@ -328,9 +332,10 @@ const Profile = () => {
                   </span>
                 </div>
               )}
-            </label>
-            <label>
-              Phone number
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+              <label style={{ fontWeight: '700', fontSize: '13px' }}>Phone number</label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>+91</span>
                 <input 
@@ -346,15 +351,37 @@ const Profile = () => {
                   placeholder="10 digit number"
                 />
               </div>
+              
               {phoneNumber && isPhoneChanged && !isPhoneVerified && !otpSent && (
                 <span 
                   onClick={handleSendOtp}
-                  style={{ color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px', marginTop: '4px' }}
+                  style={{ color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px', marginTop: '2px' }}
                 >
                   Verify phone number
                 </span>
               )}
-            </label>
+
+              {otpSent && !isPhoneVerified && (
+                <div style={{ marginTop: '8px', background: 'rgba(255,255,255,0.4)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}>
+                  <label style={{ fontSize: '11px', marginBottom: '8px', fontStyle: 'italic', fontWeight: '600' }}>Enter SMS OTP</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      value={otp} 
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="6-digit code"
+                      style={{ height: '38px', background: 'white' }}
+                    />
+                    <button 
+                      type="button" 
+                      onClick={handleVerifyOtp}
+                      style={{ minWidth: '80px', height: '38px', background: '#000', color: '#fff', borderRadius: '6px', fontSize: '12px' }}
+                    >
+                      Verify
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {otpSent && (
