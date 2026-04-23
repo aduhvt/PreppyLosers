@@ -130,19 +130,8 @@ const Profile = () => {
 
           <div className="profile-field-row">
             <label>
-              Role
-              <input value={user?.role || "user"} disabled />
-            </label>
-            <label>
               Joined
               <input value={joinedDate} disabled />
-            </label>
-          </div>
-
-          <div className="profile-field-row single-wide">
-            <label>
-              User ID
-              <input value={user?._id || ""} disabled />
             </label>
           </div>
           </section>
