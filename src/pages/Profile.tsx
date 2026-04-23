@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { API_URL } from "../config";
 import "./Profile.css";
 import logo from "../assets/logo.png";
+import profileBg from "../assets/profilepagehere.png";
 
 type AddressBook = {
   fullName: string;
@@ -93,7 +94,7 @@ const Profile = () => {
     : "Not available";
 
   return (
-    <div className="profile-page">
+    <div className="profile-page" style={{ backgroundImage: `url(${profileBg})` }}>
       <div className="profile-shell">
         <header className="profile-header">
           <img src={logo} alt="Preppy Losers" className="profile-logo" />
