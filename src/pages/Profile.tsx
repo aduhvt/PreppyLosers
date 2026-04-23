@@ -39,6 +39,7 @@ const Profile = () => {
   // Verification state
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
+  const [emailCode, setEmailCode] = useState("");
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -81,12 +82,42 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setEmailVerificationSent(true);
-      setStatus("Verification link sent to your email");
+      setStatus("Verification code sent to your email");
       setStatusType("success");
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || "Failed to send verification email";
+      const errorMsg = error.response?.data?.error || "Failed to send verification code";
       const details = error.response?.data?.details ? ` (${error.response.data.details})` : "";
       setStatus(`${errorMsg}${details}`);
+      setStatusType("error");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleVerifyEmailCode = async () => {
+    if (emailCode.length !== 6) {
+      setStatus("Enter the 6-digit code");
+      setStatusType("error");
+      return;
+    }
+    try {
+      setIsVerifying(true);
+      const token = localStorage.getItem("token");
+      const res = await axios.post(`${API_URL}/api/auth/verify-email-code`, 
+        { email, code: emailCode },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update local storage and state with new token
+      await login(res.data.token);
+      
+      setIsEmailVerified(true);
+      setEmailVerificationSent(false);
+      setEmailCode("");
+      setStatus("Email verified successfully");
+      setStatusType("success");
+    } catch (error: any) {
+      setStatus(error.response?.data?.message || "Invalid or expired code");
       setStatusType("error");
     } finally {
       setIsVerifying(false);
@@ -254,9 +285,24 @@ const Profile = () => {
                 </span>
               )}
               {emailVerificationSent && !isEmailVerified && (
-                <span style={{ color: '#000', fontSize: '11px', marginTop: '4px', fontStyle: 'italic' }}>
-                  Check your inbox for the link
-                </span>
+                <div style={{ marginTop: '10px' }}>
+                  <p style={{ fontSize: '11px', marginBottom: '5px', fontStyle: 'italic', color: '#000' }}>Enter the 6-digit code sent to your email:</p>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      value={emailCode} 
+                      onChange={(e) => setEmailCode(e.target.value)}
+                      placeholder="6-digit code"
+                      style={{ height: '36px', fontSize: '13px' }}
+                    />
+                    <button 
+                      type="button" 
+                      onClick={handleVerifyEmailCode}
+                      style={{ minWidth: '80px', height: '36px', background: '#000', color: '#fff', borderRadius: '6px', fontSize: '12px' }}
+                    >
+                      {isVerifying ? "..." : "Verify"}
+                    </button>
+                  </div>
+                </div>
               )}
             </label>
             <label>

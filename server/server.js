@@ -214,9 +214,9 @@ app.post("/api/auth/send-otp", async (req, res) => {
   }
 });
 
-// 🔥 SEND VERIFICATION EMAIL (SENDGRID MANUAL TOKEN)
+// 🔥 SEND VERIFICATION EMAIL (6-DIGIT CODE)
 app.post("/api/auth/send-verification-email", authenticate, async (req, res) => {
-  console.log("Send verification email request for:", req.body.email, "from user:", req.user.userId);
+  console.log("Send verification code request for:", req.body.email, "from user:", req.user.userId);
   try {
     const { email } = req.body;
     const userId = req.user.userId;
@@ -230,43 +230,83 @@ app.post("/api/auth/send-verification-email", authenticate, async (req, res) => 
       return res.status(400).json({ error: "Email already in use by another account" });
     }
 
-    // Generate token as requested
-    const token = crypto.randomBytes(32).toString("hex");
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
 
     // Store in DB
-    await User.findByIdAndUpdate(userId, { emailToken: token });
+    await User.findByIdAndUpdate(userId, { 
+      emailVerificationCode: code,
+      emailVerificationExpires: expires
+    });
 
-    const link = `https://preppylosers.com/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
-
-    console.log("Sending verification link via SendGrid...");
+    console.log("Sending verification code via SendGrid...");
     const msg = {
       to: email,
       from: "no-reply@preppylosers.com", // Verified SendGrid sender
-      subject: "Verify your email",
+      subject: "Your Verification Code - Preppy Losers",
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h3>Verify your email</h3>
-          <p>Click below to verify your email address:</p>
-          <a href="${link}" style="display: inline-block; background: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Verify Email</a>
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; color: #000; border: 1px solid #eee;">
+          <h2 style="text-align: center; letter-spacing: 2px;">PREPPY LOSERS</h2>
+          <p style="font-size: 16px;">Use the code below to verify your email address. This code will expire in 15 minutes.</p>
+          <div style="background: #f9f9f9; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 30px 0; border: 1px dashed #ccc;">
+            ${code}
+          </div>
+          <p style="font-size: 14px; color: #666; text-align: center;">If you didn't request this, you can safely ignore this email.</p>
         </div>
       `,
     };
 
     await sgMail.send(msg);
-    console.log("Verification email sent successfully");
-    res.json({ success: true, message: "Verification email sent successfully" });
+    console.log("Verification code sent successfully");
+    res.json({ success: true, message: "Verification code sent to your email" });
   } catch (error) {
     console.error("SENDGRID VERIFICATION ERROR:", error);
-    
-    // Provide a more descriptive error if SendGrid fails (likely missing API key or sender not verified)
-    if (error.response && error.response.body && error.response.body.errors) {
-      console.error("SendGrid Details:", JSON.stringify(error.response.body.errors));
-    }
-
     res.status(400).json({ 
-      error: "Failed to send verification email. Please ensure SendGrid is configured correctly.",
+      error: "Failed to send verification code. Please ensure SendGrid is configured correctly.",
       details: error.message 
     });
+  }
+});
+
+// 🔥 VERIFY EMAIL CODE
+app.post("/api/auth/verify-email-code", authenticate, async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    const userId = req.user.userId;
+
+    if (!email || !code) {
+      return res.status(400).json({ message: "Email and code are required" });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user || user.emailVerificationCode !== code) {
+      return res.status(400).json({ message: "Invalid verification code" });
+    }
+
+    if (new Date() > user.emailVerificationExpires) {
+      return res.status(400).json({ message: "Verification code has expired" });
+    }
+
+    // Mark as verified and clear code
+    user.emailVerified = true;
+    user.emailVerificationCode = null;
+    user.emailVerificationExpires = null;
+    user.email = email; 
+    await user.save();
+
+    // Generate new token to include verified status
+    const authToken = jwt.sign(
+      { userId: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    res.json({ message: "Email verified successfully", token: authToken });
+  } catch (error) {
+    console.error("VERIFY EMAIL CODE ERROR:", error);
+    res.status(500).json({ message: "Verification failed" });
   }
 });
 
