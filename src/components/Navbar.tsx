@@ -3,6 +3,11 @@ import "./Navbar.css";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import SmoothRotatingLogo from "./SmoothRotatingLogo";
+import { jwtDecode } from "jwt-decode";
+
+type AuthTokenPayload = {
+  phoneNumber?: string;
+};
 
 const Navbar = () => {
   const [cartCount, setCartCount] = useState(0);
@@ -12,8 +17,27 @@ const Navbar = () => {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [logoVisible, setLogoVisible] = useState(false);
 
+  const getTokenPhoneNumber = () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) return "";
+
+    try {
+      return jwtDecode<AuthTokenPayload>(token).phoneNumber || "";
+    } catch {
+      return "";
+    }
+  };
+
   const getAvatarLabel = () => {
     if (!user) return "?";
+
+    const phoneNumber = user.phoneNumber || getTokenPhoneNumber();
+
+    if (phoneNumber) {
+      const phoneDigits = phoneNumber.replace(/\D/g, "");
+      return phoneDigits.slice(-2) || "?";
+    }
 
     if (user.name && user.name.trim() !== "") {
       return user.name
@@ -26,11 +50,6 @@ const Navbar = () => {
 
     if (user.email) {
       return user.email.substring(0, 1).toUpperCase();
-    }
-
-    if (user.phoneNumber) {
-      const phoneDigits = user.phoneNumber.replace(/\D/g, "");
-      return phoneDigits.slice(-2);
     }
 
     return "?";

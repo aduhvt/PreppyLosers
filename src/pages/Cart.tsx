@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import SmoothRotatingLogo from "../components/SmoothRotatingLogo";
 import "./Cart.css";
+import { jwtDecode } from "jwt-decode";
 
 interface CartItem {
   _id: string;
@@ -13,6 +14,10 @@ interface CartItem {
   images: string[];
 }
 
+type AuthTokenPayload = {
+  phoneNumber?: string;
+};
+
 const Cart = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -20,8 +25,26 @@ const Cart = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [logoVisible, setLogoVisible] = useState(true);
 
+  const getTokenPhoneNumber = () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) return "";
+
+    try {
+      return jwtDecode<AuthTokenPayload>(token).phoneNumber || "";
+    } catch {
+      return "";
+    }
+  };
+
   const getAvatarLabel = () => {
     if (!user) return "?";
+
+    const phoneNumber = user.phoneNumber || getTokenPhoneNumber();
+
+    if (phoneNumber) {
+      return phoneNumber.replace(/\D/g, "").slice(-2) || "?";
+    }
 
     if (user.name && user.name.trim() !== "") {
       return user.name.charAt(0).toUpperCase();
@@ -29,10 +52,6 @@ const Cart = () => {
 
     if (user.email) {
       return user.email.charAt(0).toUpperCase();
-    }
-
-    if (user.phoneNumber) {
-      return user.phoneNumber.replace(/\D/g, "").slice(-2);
     }
 
     return "?";

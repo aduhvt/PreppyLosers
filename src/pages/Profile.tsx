@@ -3,6 +3,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { API_URL } from "../config";
 import "./Profile.css";
+import logo from "../assets/logo.png";
 
 type AddressBook = {
   fullName: string;
@@ -93,19 +94,18 @@ const Profile = () => {
 
   return (
     <div className="profile-page">
-      <header className="profile-header">
-        <div>
-          <p className="profile-kicker">Account</p>
+      <div className="profile-shell">
+        <header className="profile-header">
+          <img src={logo} alt="Preppy Losers" className="profile-logo" />
+          <p className="profile-kicker">Preppy Losers</p>
           <h1>Profile</h1>
-        </div>
-        <div className="profile-status-pill">{user?.role || "user"}</div>
-      </header>
+          <div className="profile-status-pill">{user?.role || "user"}</div>
+        </header>
 
-      <form className="profile-grid" onSubmit={updateProfile}>
-        <section className="profile-panel">
+        <form className="profile-form" onSubmit={updateProfile}>
+          <section className="profile-panel">
           <div className="panel-heading">
-            <h2>Identity</h2>
-            <p>Login details are shown here for reference.</p>
+            <h2>Account Details</h2>
           </div>
 
           <label>
@@ -145,12 +145,11 @@ const Profile = () => {
               <input value={user?._id || ""} disabled />
             </label>
           </div>
-        </section>
+          </section>
 
-        <section className="profile-panel">
+          <section className="profile-panel">
           <div className="panel-heading">
             <h2>Address Book</h2>
-            <p>Used for checkout delivery and saved billing details.</p>
           </div>
 
           <label>
@@ -242,8 +241,9 @@ const Profile = () => {
               {isSaving ? "Saving..." : "Save Profile"}
             </button>
           </div>
-        </section>
-      </form>
+          </section>
+        </form>
+      </div>
     </div>
   );
 };

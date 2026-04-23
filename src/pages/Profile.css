@@ -1,91 +1,101 @@
 .profile-page {
+  align-items: flex-start;
+  background: #ffffff;
+  color: #111111;
+  display: flex;
+  justify-content: center;
   min-height: 100vh;
-  background: #0e0e0e;
-  color: white;
-  padding: 48px clamp(20px, 5vw, 72px);
+  padding: 36px 18px 56px;
+}
+
+.profile-shell {
+  max-width: 760px;
+  width: 100%;
 }
 
 .profile-header {
+  align-items: center;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  max-width: 1100px;
-  margin: 0 auto 28px;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.profile-logo {
+  height: 82px;
+  object-fit: contain;
+  width: 82px;
 }
 
 .profile-kicker {
-  color: #a9a9a9;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  margin-bottom: 6px;
+  color: #555555;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  margin: 4px 0 0;
   text-transform: uppercase;
 }
 
 .profile-header h1 {
-  color: white;
+  color: #111111;
   font-size: 34px;
   line-height: 1;
   margin: 0;
 }
 
 .profile-status-pill {
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid #d7d7d7;
   border-radius: 999px;
-  color: #d8d8d8;
-  font-size: 13px;
-  padding: 8px 14px;
+  color: #333333;
+  font-size: 12px;
+  margin-top: 4px;
+  padding: 7px 12px;
   text-transform: capitalize;
 }
 
-.profile-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  gap: 22px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.profile-panel {
-  background: #151515;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+.profile-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.profile-panel {
+  background: #ffffff;
+  border: 1px solid #dedede;
+  border-radius: 8px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
   padding: 24px;
 }
 
 .panel-heading {
-  margin-bottom: 4px;
+  border-bottom: 1px solid #eeeeee;
+  padding-bottom: 12px;
 }
 
 .panel-heading h2 {
-  color: white;
-  font-size: 20px;
-  margin: 0 0 6px;
-}
-
-.panel-heading p {
-  color: #9d9d9d;
-  font-size: 13px;
-  line-height: 1.5;
+  color: #111111;
+  font-size: 18px;
   margin: 0;
 }
 
 .profile-panel label {
-  color: #cfcfcf;
+  color: #303030;
   display: flex;
   flex-direction: column;
   font-size: 13px;
-  gap: 8px;
+  font-weight: 600;
+  gap: 7px;
+  text-align: left;
 }
 
 .profile-panel input {
-  background: #0d0d0d;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #fbfbfb;
+  border: 1px solid #d7d7d7;
   border-radius: 6px;
-  color: white;
+  color: #111111;
   font-size: 14px;
   min-height: 42px;
   padding: 10px 12px;
@@ -93,20 +103,22 @@
 }
 
 .profile-panel input:focus {
-  border-color: rgba(255, 255, 255, 0.5);
+  background: #ffffff;
+  border-color: #111111;
   outline: none;
 }
 
 .profile-panel input:disabled {
-  color: #888;
+  background: #f2f2f2;
+  color: #666666;
   cursor: not-allowed;
   opacity: 1;
 }
 
 .profile-field-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .profile-field-row.single-wide {
@@ -118,18 +130,18 @@
   display: flex;
   gap: 16px;
   justify-content: flex-end;
-  margin-top: 4px;
+  padding-top: 4px;
 }
 
 .profile-actions button {
-  background: white;
+  background: #111111;
   border: none;
   border-radius: 6px;
-  color: black;
+  color: #ffffff;
   cursor: pointer;
   font-weight: 700;
   min-height: 42px;
-  min-width: 130px;
+  min-width: 140px;
   padding: 10px 18px;
 }
 
@@ -140,30 +152,20 @@
 
 .profile-message {
   font-size: 13px;
+  font-weight: 600;
 }
 
 .profile-message.success {
-  color: #58d17a;
+  color: #16803a;
 }
 
 .profile-message.error {
-  color: #ff6b6b;
+  color: #c62828;
 }
 
-@media (max-width: 820px) {
-  .profile-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .profile-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 560px) {
+@media (max-width: 620px) {
   .profile-page {
-    padding: 28px 16px;
+    padding: 24px 12px 42px;
   }
 
   .profile-panel {
