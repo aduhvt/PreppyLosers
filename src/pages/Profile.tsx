@@ -200,6 +200,11 @@ const Profile = () => {
 
         <form className="profile-form" onSubmit={updateProfile}>
           <section className="profile-panel">
+          {status && (
+            <div className={`profile-message ${statusType}`} style={{ marginBottom: '15px', textAlign: 'center', width: '100%' }}>
+              {status}
+            </div>
+          )}
           <div className="panel-heading">
             <h2>Account Details</h2>
           </div>
@@ -385,9 +390,6 @@ const Profile = () => {
           </div>
 
           <div className="profile-actions">
-            {status && (
-              <span className={`profile-message ${statusType}`}>{status}</span>
-            )}
             <button type="submit" disabled={isSaving}>
               {isSaving ? "Saving..." : "Save Profile"}
             </button>

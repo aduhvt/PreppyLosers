@@ -257,7 +257,16 @@ app.post("/api/auth/send-verification-email", authenticate, async (req, res) => 
     res.json({ success: true, message: "Verification email sent successfully" });
   } catch (error) {
     console.error("SENDGRID VERIFICATION ERROR:", error);
-    res.status(500).json({ error: "Failed to send verification email" });
+    
+    // Provide a more descriptive error if SendGrid fails (likely missing API key or sender not verified)
+    if (error.response && error.response.body && error.response.body.errors) {
+      console.error("SendGrid Details:", JSON.stringify(error.response.body.errors));
+    }
+
+    res.status(400).json({ 
+      error: "Failed to send verification email. Please ensure SendGrid is configured correctly.",
+      details: error.message 
+    });
   }
 });
 
