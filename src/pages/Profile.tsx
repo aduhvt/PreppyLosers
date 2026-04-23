@@ -29,13 +29,23 @@ const emptyAddressBook: AddressBook = {
 const Profile = () => {
   const { user, refreshUser } = useAuth();
   const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [addressBook, setAddressBook] = useState<AddressBook>(emptyAddressBook);
   const [status, setStatus] = useState("");
   const [statusType, setStatusType] = useState<"success" | "error">("success");
   const [isSaving, setIsSaving] = useState(false);
 
+  // Phone verification state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+
   useEffect(() => {
     setName(user?.name || "");
+    const userPhone = user?.phoneNumber || "";
+    setPhoneNumber(userPhone.replace("+91", ""));
+    setIsPhoneVerified(!!user?.phoneNumber);
     setAddressBook({
       ...emptyAddressBook,
       ...(user?.addressBook || {}),
@@ -49,8 +59,55 @@ const Profile = () => {
     }));
   };
 
+  const handleSendOtp = async () => {
+    if (phoneNumber.length !== 10) {
+      setStatus("Enter a valid 10-digit number");
+      setStatusType("error");
+      return;
+    }
+    try {
+      setIsVerifying(true);
+      await axios.post(`${API_URL}/api/auth/send-phone-otp`, {
+        phoneNumber: `+91${phoneNumber}`,
+      });
+      setOtpSent(true);
+      setStatus("Verification code sent via SMS");
+      setStatusType("success");
+    } catch (error: any) {
+      setStatus(error.response?.data?.error || "Failed to send SMS");
+      setStatusType("error");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    try {
+      setIsVerifying(true);
+      await axios.post(`${API_URL}/api/auth/verify-phone-otp`, {
+        phoneNumber: `+91${phoneNumber}`,
+        otp,
+      });
+      setIsPhoneVerified(true);
+      setOtpSent(false);
+      setStatus("Phone number verified");
+      setStatusType("success");
+    } catch (error: any) {
+      setStatus(error.response?.data?.message || "Invalid OTP");
+      setStatusType("error");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   const updateProfile = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (phoneNumber && !isPhoneVerified && phoneNumber !== user?.phoneNumber?.replace("+91", "")) {
+      setStatus("Please verify your phone number first");
+      setStatusType("error");
+      return;
+    }
 
     try {
       setIsSaving(true);
@@ -61,6 +118,7 @@ const Profile = () => {
         `${API_URL}/api/users/profile`,
         {
           name: name.trim(),
+          phoneNumber: phoneNumber ? `+91${phoneNumber}` : null,
           addressBook: {
             ...addressBook,
             fullName: addressBook.fullName.trim(),
@@ -89,9 +147,7 @@ const Profile = () => {
     }
   };
 
-  const joinedDate = user?.createdAt
-    ? new Date(user.createdAt).toLocaleDateString()
-    : "Not available";
+  const isPhoneChanged = phoneNumber !== user?.phoneNumber?.replace("+91", "");
 
   return (
     <div className="profile-page" style={{ backgroundImage: `url(${profileBg})` }}>
@@ -100,7 +156,6 @@ const Profile = () => {
           <img src={logo} alt="Preppy Losers" className="profile-logo" />
           <p className="profile-kicker">Preppy Losers</p>
           <h1>Profile</h1>
-          <div className="profile-status-pill">{user?.role || "user"}</div>
         </header>
 
         <form className="profile-form" onSubmit={updateProfile}>
@@ -121,20 +176,59 @@ const Profile = () => {
           <div className="profile-field-row">
             <label>
               Email
-              <input value={user?.email || "Not added"} disabled />
+              <input value={user?.email || "Not added"} disabled style={{ cursor: 'not-allowed' }} />
             </label>
             <label>
               Phone number
-              <input value={user?.phoneNumber || "Not added"} disabled />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>+91</span>
+                <input 
+                  value={phoneNumber} 
+                  onChange={(e) => {
+                    setPhoneNumber(e.target.value);
+                    if (e.target.value !== user?.phoneNumber?.replace("+91", "")) {
+                      setIsPhoneVerified(false);
+                    } else {
+                      setIsPhoneVerified(true);
+                    }
+                  }}
+                  placeholder="10 digit number"
+                  disabled={user?.phoneNumber && !isPhoneChanged}
+                  style={user?.phoneNumber && !isPhoneChanged ? { cursor: 'not-allowed' } : {}}
+                />
+              </div>
+              {phoneNumber && isPhoneChanged && !isPhoneVerified && !otpSent && (
+                <span 
+                  onClick={handleSendOtp}
+                  style={{ color: '#000', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px', marginTop: '4px' }}
+                >
+                  Verify phone number
+                </span>
+              )}
             </label>
           </div>
 
-          <div className="profile-field-row">
-            <label>
-              Joined
-              <input value={joinedDate} disabled />
-            </label>
-          </div>
+          {otpSent && (
+            <div className="profile-field-row" style={{ marginTop: '10px' }}>
+              <label>
+                Enter SMS OTP
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    value={otp} 
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="6-digit code"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={handleVerifyOtp}
+                    style={{ minWidth: '80px', height: '42px', background: '#000', color: '#fff', borderRadius: '6px' }}
+                  >
+                    Verify
+                  </button>
+                </div>
+              </label>
+            </div>
+          )}
           </section>
 
           <section className="profile-panel">
